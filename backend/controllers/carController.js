@@ -57,8 +57,7 @@ exports.bookCar = async (req, res) => {
     await car.save();
 
     // Here you would typically create a booking record
-    // For now, we'll just return a success message
-    res.json({ 
+    res.json({
       message: 'Car booked successfully',
       bookingDetails: {
         carId: car._id,
@@ -128,7 +127,6 @@ exports.addMultipleCars = async (req, res) => {
 // Get reserved cars
 exports.getReservedCars = async (req, res) => {
   try {
-    // In a real application, you would fetch reserved cars based on user ID or booking status
     const reservedCars = await Car.find({ available: false }); // Example: showing all unavailable cars as reserved
     res.json(reservedCars);
   } catch (error) {
@@ -139,7 +137,6 @@ exports.getReservedCars = async (req, res) => {
 // Get rented cars
 exports.getRentedCars = async (req, res) => {
   try {
-    // In a real application, you would fetch rented cars based on active rental agreements
     const rentedCars = await Car.find({ available: false }); // Example: showing all unavailable cars as rented
     res.json(rentedCars);
   } catch (error) {
@@ -151,8 +148,23 @@ exports.getRentedCars = async (req, res) => {
 exports.getFavoriteCars = async (req, res) => {
   try {
     // In a real application, you would fetch favorite cars based on user preferences
-    const favoriteCars = []; // Placeholder for now
+    // For now, this will return an empty array if no specific logic is added
+    const favoriteCarIds = req.query.ids ? req.query.ids.split(',') : [];
+    const favoriteCars = await Car.find({ '_id': { $in: favoriteCarIds } });
     res.json(favoriteCars);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get car by ID (used by frontend for favorites page)
+exports.getCarById = async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.id);
+    if (!car) {
+      return res.status(404).json({ message: 'Car not found' });
+    }
+    res.json(car);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

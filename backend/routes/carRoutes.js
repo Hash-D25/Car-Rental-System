@@ -32,4 +32,7 @@ router.get("/rented", carController.getRentedCars);
 // Get favorite cars
 router.get("/favorites", carController.getFavoriteCars);
 
+// Get car by ID
+router.get("/:id", carController.getCarById);
+
 module.exports = router;

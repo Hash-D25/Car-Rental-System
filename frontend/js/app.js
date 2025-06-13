@@ -46,11 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Load cars from API
 async function loadCars(filters = {}) {
+    console.log('loadCars function called with filters:', filters);
     try {
         const queryParams = new URLSearchParams(filters).toString();
+        console.log('Fetching cars from:', `${API_URL}/cars?${queryParams}`);
         const response = await fetch(`${API_URL}/cars?${queryParams}`);
-        if (!response.ok) throw new Error('Failed to fetch cars');
+        if (!response.ok) throw new Error(`Failed to fetch cars: ${response.status} ${response.statusText}`);
         const cars = await response.json();
+        console.log('Cars fetched successfully:', cars);
         displayCars(cars, carsGrid);
     } catch (error) {
         console.error('Error loading cars:', error);
@@ -60,15 +63,24 @@ async function loadCars(filters = {}) {
 
 // Display cars in the grid
 function displayCars(cars, container) {
-    if (!container) return;
+    console.log('displayCars function called.');
+    console.log('Cars data received:', cars);
+    console.log('Container element:', container);
+
+    if (!container) {
+        console.error('Container element not found!', container);
+        return;
+    }
     
     container.innerHTML = '';
     if (cars.length === 0) {
         container.innerHTML = '<p class="no-cars">No cars found matching your criteria.</p>';
+        console.log('No cars to display.');
         return;
     }
 
     const favoriteCars = JSON.parse(localStorage.getItem('favoriteCars')) || [];
+    console.log('Favorite cars from localStorage:', favoriteCars);
 
     cars.forEach(car => {
         const isFavorite = favoriteCars.includes(car._id);
