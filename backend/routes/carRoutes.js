@@ -23,4 +23,13 @@ router.delete("/:carId", carController.deleteCar);
 // Add multiple cars (for testing/initial setup)
 router.post("/bulk", carController.addMultipleCars);
 
+// Get reserved cars
+router.get("/reserved", carController.getReservedCars);
+
+// Get rented cars
+router.get("/rented", carController.getRentedCars);
+
+// Get favorite cars
+router.get("/favorites", carController.getFavoriteCars);
+
 module.exports = router;

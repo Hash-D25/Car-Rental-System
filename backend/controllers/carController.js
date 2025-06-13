@@ -124,3 +124,36 @@ exports.addMultipleCars = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+// Get reserved cars
+exports.getReservedCars = async (req, res) => {
+  try {
+    // In a real application, you would fetch reserved cars based on user ID or booking status
+    const reservedCars = await Car.find({ available: false }); // Example: showing all unavailable cars as reserved
+    res.json(reservedCars);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get rented cars
+exports.getRentedCars = async (req, res) => {
+  try {
+    // In a real application, you would fetch rented cars based on active rental agreements
+    const rentedCars = await Car.find({ available: false }); // Example: showing all unavailable cars as rented
+    res.json(rentedCars);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get favorite cars
+exports.getFavoriteCars = async (req, res) => {
+  try {
+    // In a real application, you would fetch favorite cars based on user preferences
+    const favoriteCars = []; // Placeholder for now
+    res.json(favoriteCars);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
