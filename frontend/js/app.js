@@ -68,7 +68,12 @@ function displayCars(cars, container) {
         return;
     }
 
+    const favoriteCars = JSON.parse(localStorage.getItem('favoriteCars')) || [];
+
     cars.forEach(car => {
+        const isFavorite = favoriteCars.includes(car._id);
+        const favoriteIconClass = isFavorite ? 'fas' : 'far'; // solid for favorited, regular for not
+
         const carCard = document.createElement('div');
         carCard.className = 'car-card';
         carCard.innerHTML = `
@@ -81,9 +86,14 @@ function displayCars(cars, container) {
                     <span class="car-spec"><i class="fas fa-car"></i> ${car.category}</span>
                 </div>
                 <p class="car-price">$${car.price}/day</p>
-                <button onclick="openBookingModal('${car._id}')" ${!car.available ? 'disabled' : ''}>
-                    ${car.available ? 'Book Now' : 'Not Available'}
-                </button>
+                <div class="card-actions">
+                    <button onclick="openBookingModal('${car._id}')" ${!car.available ? 'disabled' : ''}>
+                        ${car.available ? 'Book Now' : 'Not Available'}
+                    </button>
+                    <button class="favorite-btn" onclick="toggleFavorite('${car._id}')">
+                        <i class="${favoriteIconClass} fa-heart"></i>
+                    </button>
+                </div>
             </div>
         `;
         container.appendChild(carCard);
@@ -199,10 +209,23 @@ async function loadRentedCars() {
 // Load favorite cars
 async function loadFavoriteCars() {
     try {
-        const response = await fetch(`${API_URL}/cars/favorites`);
-        if (!response.ok) throw new Error('Failed to fetch favorite cars');
-        const cars = await response.json();
-        displayCars(cars, favoriteCarsGrid);
+        const favoriteCarIds = JSON.parse(localStorage.getItem('favoriteCars')) || [];
+        if (favoriteCarIds.length === 0) {
+            if (favoriteCarsGrid) {
+                favoriteCarsGrid.innerHTML = '<p class="no-cars">You have no favorite cars yet.</p>';
+            }
+            return;
+        }
+
+        // Fetch each favorite car by its ID
+        const fetchPromises = favoriteCarIds.map(id => fetch(`${API_URL}/cars/${id}`));
+        const responses = await Promise.all(fetchPromises);
+        const cars = await Promise.all(responses.map(res => res.json()));
+        
+        // Filter out any cars that might not have been found (e.g., deleted from DB)
+        const validCars = cars.filter(car => car && !car.message); 
+
+        displayCars(validCars, favoriteCarsGrid);
     } catch (error) {
         console.error('Error loading favorite cars:', error);
         showError('Failed to load favorite cars. Please try again later.');
@@ -264,6 +287,32 @@ function setupPaymentFilters() {
             });
         }
     });
+}
+
+// Toggle favorite status
+function toggleFavorite(carId) {
+    let favoriteCars = JSON.parse(localStorage.getItem('favoriteCars')) || [];
+    const index = favoriteCars.indexOf(carId);
+
+    if (index > -1) {
+        // Car is already a favorite, remove it
+        favoriteCars.splice(index, 1);
+        showSuccess('Removed from favorites!');
+    } else {
+        // Car is not a favorite, add it
+        favoriteCars.push(carId);
+        showSuccess('Added to favorites!');
+    }
+
+    localStorage.setItem('favoriteCars', JSON.stringify(favoriteCars));
+
+    // Refresh the current view if it's the favorites page or the home page
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage === 'favorites.html') {
+        loadFavoriteCars();
+    } else if (currentPage === 'index.html' || currentPage === '') {
+        loadCars(); // Reload cars to update favorite icons
+    }
 }
 
 // Utility functions
