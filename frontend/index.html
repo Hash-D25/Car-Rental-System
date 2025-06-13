@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Car Rental System</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header>
+      <nav>
+        <div class="logo">
+          <i class="fas fa-car"></i>
+          Car Rental
+        </div>
+        <div class="nav-links">
+          <a href="#" class="active">Home</a>
+          <a href="#cars">Cars</a>
+          <a href="#about">About</a>
+        </div>
+      </nav>
+      <div class="sub-nav">
+        <a href="#home" class="sub-nav-link sub-nav-active" id="tab-home"
+          >HOME</a
+        >
+        <a href="#reserved" class="sub-nav-link" id="tab-reserved">RESERVED</a>
+        <a href="#rented" class="sub-nav-link" id="tab-rented">RENTED</a>
+        <a href="#favourites" class="sub-nav-link" id="tab-favourites"
+          >FAVOURITES</a
+        >
+        <a href="#payments" class="sub-nav-link" id="tab-payments">PAYMENTS</a>
+      </div>
+    </header>
+
+    <main>
+      <section id="home-section" class="tab-section">
+        <section class="hero">
+          <h1>Find Your Perfect Ride</h1>
+          <p>Choose from our wide range of premium cars</p>
+          <a href="#cars" class="cta-button">Browse Cars</a>
+        </section>
+      </section>
+      <section id="reserved-section" class="tab-section" style="display: none">
+        <!-- Reserved content here -->
+      </section>
+      <section id="rented-section" class="tab-section" style="display: none">
+        <!-- Rented content here -->
+      </section>
+      <section
+        id="favourites-section"
+        class="tab-section"
+        style="display: none"
+      >
+        <!-- Favourites content here -->
+      </section>
+      <section id="payments-section" class="tab-section" style="display: none">
+        <!-- Payments content here -->
+      </section>
+
+      <section id="cars" class="car-listings">
+        <div class="filters">
+          <div class="filter-group">
+            <label for="category">Category:</label>
+            <select id="category">
+              <option value="">All Categories</option>
+              <option value="Sedan">Sedan</option>
+              <option value="SUV">SUV</option>
+              <option value="Luxury">Luxury</option>
+              <option value="Electric">Electric</option>
+              <option value="Sports">Sports</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="price">Price Range:</label>
+            <select id="price">
+              <option value="">All Prices</option>
+              <option value="0-50">$0 - $50</option>
+              <option value="51-100">$51 - $100</option>
+              <option value="101-150">$101 - $150</option>
+              <option value="151+">$151+</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="transmission">Transmission:</label>
+            <select id="transmission">
+              <option value="">All</option>
+              <option value="Automatic">Automatic</option>
+              <option value="Manual">Manual</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="cars-grid" id="carsGrid">
+          <!-- Cars will be dynamically added here -->
+        </div>
+      </section>
+    </main>
+
+    <div id="bookingModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Book Your Car</h2>
+        <form id="bookingForm">
+          <div class="form-group">
+            <label for="name">Your Name:</label>
+            <input type="text" id="name" required />
+          </div>
+          <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" required />
+          </div>
+          <div class="form-group">
+            <label for="returnDate">Return Date:</label>
+            <input type="date" id="returnDate" required />
+          </div>
+          <div class="booking-summary">
+            <h3>Booking Summary</h3>
+            <div id="bookingDetails"></div>
+          </div>
+          <button type="submit" class="btn-primary">Confirm Booking</button>
+        </form>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>About Us</h3>
+          <p>
+            Your trusted partner for premium car rentals. We offer a wide range
+            of vehicles to suit your needs.
+          </p>
+        </div>
+        <div class="footer-section">
+          <h3>Contact</h3>
+          <p><i class="fas fa-phone"></i> +1 234 567 890</p>
+          <p><i class="fas fa-envelope"></i> info@carrental.com</p>
+        </div>
+        <div class="footer-section">
+          <h3>Follow Us</h3>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Car Rental System. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
