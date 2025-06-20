@@ -16,6 +16,7 @@ const bookingDetails = document.getElementById("bookingDetails");
 
 let selectedCarId = null;
 let allCars = []; // To store all cars fetched from the server
+let allPayments = [];
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
@@ -101,6 +102,18 @@ function displayCars(carsToDisplay, container) {
             </div>
         `;
         container.appendChild(carCard);
+
+        if (container === reservedCarsGrid) {
+            const payment = allPayments.find(p => p.bookingId === car._id);
+            if (!payment) {
+                carCard.innerHTML += `<button class="btn-primary" onclick='payForCar(${JSON.stringify(car)})'>Pay Now</button>`;
+            } else if (payment.status === 'Pending') {
+                carCard.innerHTML += `<div class="payment-status pending">Pending</div>`;
+                carCard.innerHTML += `<button class="btn-primary" onclick='completePayment("${payment._id}")'>Complete Payment</button>`;
+            } else if (payment.status === 'Completed') {
+                carCard.innerHTML += `<div class="payment-status completed">Paid</div>`;
+            }
+        }
     });
 }
 
@@ -191,7 +204,7 @@ function setupModal() {
                 showSuccess(`Booking confirmed! Booking ID: ${result.id}`);
                 modal.style.display = 'none';
                 form.reset();
-                loadCars(); // Refresh the car list
+                window.location.href = 'pages/reserved.html'; // Redirect to reserved page
             } else {
                 const error = await response.json();
                 showError(error.message || 'Failed to book the car. Please try again.');
@@ -215,9 +228,14 @@ function openBookingModal(carId) {
 // Load reserved cars
 async function loadReservedCars() {
     try {
-        const response = await fetch(`${API_URL}/cars/reserved`);
-        if (!response.ok) throw new Error('Failed to fetch reserved cars');
-        const cars = await response.json();
+        const [carsResponse, paymentsResponse] = await Promise.all([
+            fetch(`${API_URL}/cars/reserved`),
+            fetch(`${API_URL}/payments`)
+        ]);
+        if (!carsResponse.ok) throw new Error('Failed to fetch reserved cars');
+        if (!paymentsResponse.ok) throw new Error('Failed to fetch payments');
+        const cars = await carsResponse.json();
+        allPayments = await paymentsResponse.json();
         displayCars(cars, reservedCarsGrid);
     } catch (error) {
         console.error('Error loading reserved cars:', error);
@@ -354,4 +372,55 @@ function showError(message) {
 
 function showSuccess(message) {
     alert(message); // You can replace this with a better UI notification
+}
+
+// Add payForCar function
+async function payForCar(car) {
+    try {
+        let amount = car.price;
+        if (car.bookingDetails && car.bookingDetails.returnDate && car.bookingDetails.bookingDate) {
+            const start = new Date(car.bookingDetails.bookingDate);
+            const end = new Date(car.bookingDetails.returnDate);
+            const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+            amount = car.price * days;
+        }
+        const response = await fetch(`${API_URL}/payments/booking`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                carId: car._id,
+                carName: car.name,
+                amount,
+                status: 'Pending'
+            })
+        });
+        if (response.ok) {
+            showSuccess('Payment initiated!');
+            loadReservedCars();
+        } else {
+            const error = await response.json();
+            showError(error.message || 'Payment failed.');
+        }
+    } catch (error) {
+        showError('Payment failed.');
+    }
+}
+
+// Add completePayment function
+async function completePayment(paymentId) {
+    try {
+        const response = await fetch(`${API_URL}/payments/${paymentId}/complete`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (response.ok) {
+            showSuccess('Payment completed!');
+            loadReservedCars();
+        } else {
+            const error = await response.json();
+            showError(error.message || 'Failed to complete payment.');
+        }
+    } catch (error) {
+        showError('Failed to complete payment.');
+    }
 }
