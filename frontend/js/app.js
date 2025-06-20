@@ -15,7 +15,7 @@ const transmissionFilter = document.getElementById("transmission");
 const bookingDetails = document.getElementById("bookingDetails");
 
 let selectedCarId = null;
-let cars = [];
+let allCars = []; // To store all cars fetched from the server
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
@@ -45,16 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Load cars from API
-async function loadCars(filters = {}) {
-    console.log('loadCars function called with filters:', filters);
+async function loadCars() {
     try {
-        const queryParams = new URLSearchParams(filters).toString();
-        console.log('Fetching cars from:', `${API_URL}/cars?${queryParams}`);
-        const response = await fetch(`${API_URL}/cars?${queryParams}`);
+        const response = await fetch(`${API_URL}/cars`);
         if (!response.ok) throw new Error(`Failed to fetch cars: ${response.status} ${response.statusText}`);
-        const cars = await response.json();
-        console.log('Cars fetched successfully:', cars);
-        displayCars(cars, carsGrid);
+        allCars = await response.json();
+        displayCars(allCars, carsGrid);
     } catch (error) {
         console.error('Error loading cars:', error);
         showError('Failed to load cars. Please try again later.');
@@ -62,18 +58,14 @@ async function loadCars(filters = {}) {
 }
 
 // Display cars in the grid
-function displayCars(cars, container) {
-    console.log('displayCars function called.');
-    console.log('Cars data received:', cars);
-    console.log('Container element:', container);
-
+function displayCars(carsToDisplay, container) {
     if (!container) {
         console.error('Container element not found!', container);
         return;
     }
     
     container.innerHTML = '';
-    if (cars.length === 0) {
+    if (carsToDisplay.length === 0) {
         container.innerHTML = '<p class="no-cars">No cars found matching your criteria.</p>';
         console.log('No cars to display.');
         return;
@@ -82,7 +74,7 @@ function displayCars(cars, container) {
     const favoriteCars = JSON.parse(localStorage.getItem('favoriteCars')) || [];
     console.log('Favorite cars from localStorage:', favoriteCars);
 
-    cars.forEach(car => {
+    carsToDisplay.forEach(car => {
         const isFavorite = favoriteCars.includes(car._id);
         const favoriteIconClass = isFavorite ? 'fas' : 'far'; // solid for favorited, regular for not
 
@@ -114,20 +106,48 @@ function displayCars(cars, container) {
 
 // Setup filter event listeners
 function setupFilters() {
-    const filters = ['category', 'price', 'transmission'];
-    filters.forEach(filterId => {
-        const element = document.getElementById(filterId);
-        if (element) {
-            element.addEventListener('change', () => {
-                const filterValues = {
-                    category: document.getElementById('category').value,
-                    price: document.getElementById('price').value,
-                    transmission: document.getElementById('transmission').value
-                };
-                loadCars(filterValues);
-            });
+    [categoryFilter, priceFilter, transmissionFilter].forEach(filter => {
+        if (filter) {
+            filter.addEventListener('change', applyFilters);
         }
     });
+
+    // Clear Filters button logic
+    const clearBtn = document.getElementById('clearFilters');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            if (categoryFilter) categoryFilter.value = '';
+            if (priceFilter) priceFilter.value = '';
+            if (transmissionFilter) transmissionFilter.value = '';
+            applyFilters();
+        });
+    }
+}
+
+function applyFilters() {
+    let filteredCars = [...allCars];
+
+    const category = categoryFilter.value;
+    if (category) {
+        filteredCars = filteredCars.filter(car => car.category === category);
+    }
+
+    const priceRange = priceFilter.value;
+    if (priceRange) {
+        if (priceRange === '151+') {
+            filteredCars = filteredCars.filter(car => car.price >= 151);
+        } else {
+            const [min, max] = priceRange.split('-').map(Number);
+            filteredCars = filteredCars.filter(car => car.price >= min && car.price <= max);
+        }
+    }
+
+    const transmission = transmissionFilter.value;
+    if (transmission) {
+        filteredCars = filteredCars.filter(car => car.transmission === transmission);
+    }
+
+    displayCars(filteredCars, carsGrid);
 }
 
 // Modal handling
