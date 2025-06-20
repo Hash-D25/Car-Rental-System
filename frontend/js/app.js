@@ -91,8 +91,8 @@ function displayCars(carsToDisplay, container) {
                 </div>
                 <p class="car-price">$${car.price}/day</p>
                 <div class="card-actions">
-                    <button onclick="openBookingModal('${car._id}')" ${!car.available ? 'disabled' : ''}>
-                        ${car.available ? 'Book Now' : 'Not Available'}
+                    <button onclick="openBookingModal('${car._id}')" ${car.isBooked ? 'disabled' : ''}>
+                        ${car.isBooked ? 'Reserved' : 'Book Now'}
                     </button>
                     <button class="favorite-btn" onclick="toggleFavorite('${car._id}')">
                         <i class="${favoriteIconClass} fa-heart"></i>
