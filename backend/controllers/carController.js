@@ -145,7 +145,13 @@ exports.getReservedCars = async (req, res) => {
 // Get rented cars
 exports.getRentedCars = async (req, res) => {
   try {
-    const rentedCars = await Car.find({ isBooked: true });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to midnight for date-only comparison
+    const rentedCars = await Car.find({
+      isBooked: true,
+      'bookingDetails.bookingDate': { $lte: today },
+      'bookingDetails.returnDate': { $gte: today }
+    });
     res.json(rentedCars);
   } catch (error) {
     res.status(500).json({ message: error.message });
