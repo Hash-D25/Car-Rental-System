@@ -11,9 +11,6 @@ let isLoginMode = true;
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Check if user is already logged in
-    checkAuthStatus();
-    
     // Setup form toggling
     setupFormToggle();
     
@@ -22,16 +19,27 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Setup form submissions
     setupFormSubmissions();
-});
 
-// Check if user is already authenticated
-function checkAuthStatus() {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-        // User is logged in, redirect to home page
-        window.location.href = 'index.html';
+    const token = localStorage.getItem('token');
+    if (!token && window.location.pathname.endsWith('profile.html')) {
+        window.location.href = '/login.html';
+        return;
     }
-}
+
+    if (window.location.pathname.endsWith('profile.html')) {
+        loadUserProfile();
+        
+        const profileForm = document.getElementById('profileForm');
+        if(profileForm) {
+            profileForm.addEventListener('submit', handleProfileUpdate);
+        }
+
+        const passwordForm = document.getElementById('passwordForm');
+        if(passwordForm) {
+            passwordForm.addEventListener('submit', handlePasswordChange);
+        }
+    }
+});
 
 // Setup form toggle between login and register
 function setupFormToggle() {
@@ -129,8 +137,8 @@ async function handleLogin() {
         
         if (response.ok) {
             // Store token and user data
-            localStorage.setItem('authToken', data.token);
-            localStorage.setItem('userData', JSON.stringify(data.user));
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
             
             showSuccess('Login successful! Redirecting...');
             
@@ -331,4 +339,100 @@ function showNotification(message, type) {
             }
         }, 300);
     });
+}
+
+async function loadUserProfile() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+        const response = await fetch(`${API_URL}/auth/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                window.location.href = '/login.html';
+            }
+            throw new Error('Failed to fetch profile');
+        }
+
+        const { user } = await response.json();
+        document.getElementById('name').value = user.name;
+        document.getElementById('email').value = user.email;
+        document.getElementById('phone').value = user.phone || '';
+        document.getElementById('address').value = user.address || '';
+        document.getElementById('licenseNumber').value = user.licenseNumber || '';
+
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        alert('Could not load your profile.');
+    }
+}
+
+async function handleProfileUpdate(event) {
+    event.preventDefault();
+    const token = localStorage.getItem('token');
+
+    const profileData = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        address: document.getElementById('address').value,
+        licenseNumber: document.getElementById('licenseNumber').value
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/auth/profile`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(profileData)
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update profile');
+        }
+
+        const { user } = await response.json();
+        localStorage.setItem('user', JSON.stringify(user));
+        alert('Profile updated successfully!');
+
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        alert('Failed to update profile. Please try again.');
+    }
+}
+
+async function handlePasswordChange(event) {
+    event.preventDefault();
+    const token = localStorage.getItem('token');
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+
+    try {
+        const response = await fetch(`${API_URL}/auth/change-password`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to change password');
+        }
+
+        alert('Password changed successfully!');
+        document.getElementById('passwordForm').reset();
+
+    } catch (error) {
+        console.error('Error changing password:', error);
+        alert(`Error: ${error.message}`);
+    }
 } 

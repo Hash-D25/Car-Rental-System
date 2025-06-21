@@ -8,7 +8,8 @@
     "start": "node app.js",
     "add-cars": "node scripts/addCars.js",
     "add-cars-bulk": "node scripts/addCarsBulk.js",
-    "add-admin": "node scripts/addAdmin.js"
+    "add-admin": "node scripts/addAdmin.js",
+    "list-users": "node scripts/listUsers.js"
   },
   "keywords": [],
   "author": "",

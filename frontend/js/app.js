@@ -21,10 +21,13 @@ let currentUser = null;
 
 // Authentication check
 function checkAuth() {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     if (!token) {
         // Redirect to login if not authenticated
-        window.location.href = 'login.html';
+        const currentPage = window.location.pathname.split('/').pop();
+        if (currentPage !== 'login.html' && currentPage !== 'register.html') {
+            window.location.href = 'login.html';
+        }
         return false;
     }
     return true;
@@ -41,7 +44,7 @@ function getCurrentUser() {
 
 // Logout function
 function logout() {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('userData');
     localStorage.removeItem('favoriteCars');
     window.location.href = 'login.html';
@@ -101,7 +104,36 @@ document.addEventListener('DOMContentLoaded', () => {
             setupPaymentFilters();
             break;
     }
+    updateNav();
+    setupLogout();
 });
+
+function updateNav() {
+    const token = localStorage.getItem("token");
+    const profileLink = document.getElementById("profileLink");
+    const loginLink = document.getElementById("loginLink");
+    const logoutLink = document.getElementById("logoutLink");
+
+    if (token) {
+        profileLink.style.display = "inline";
+        logoutLink.style.display = "inline";
+        loginLink.style.display = "none";
+    } else {
+        profileLink.style.display = "none";
+        logoutLink.style.display = "none";
+        loginLink.style.display = "inline";
+    }
+}
+
+function setupLogout() {
+    const logoutLink = document.getElementById("logoutLink");
+    if (logoutLink) {
+        logoutLink.addEventListener("click", (e) => {
+            e.preventDefault();
+            logout();
+        });
+    }
+}
 
 // Load cars from API
 async function loadCars() {

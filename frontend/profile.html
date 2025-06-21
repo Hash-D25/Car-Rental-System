@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile - Car Rental System</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/auth.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>User Profile - Car Rental</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/auth.css">
 </head>
 <body>
     <header>
@@ -17,140 +15,65 @@
                 Car Rental
             </div>
             <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="pages/reserved.html">Reserved</a>
-                <a href="pages/rented.html">Rented</a>
-                <a href="pages/favorites.html">Favorites</a>
-                <a href="pages/payments.html">Payments</a>
-                <a href="profile.html" class="active">Profile</a>
+                <a href="../index.html">Home</a>
+                <a href="reserved.html">Reserved</a>
+                <a href="rented.html">Rented</a>
+                <a href="favorites.html">Favorites</a>
+                <a href="payments.html">Payments</a>
+            </div>
+            <div class="auth-links">
+                <a href="profile.html" id="profileLink" class="nav-link" style="display: none;">Profile</a>
+                <a href="../login.html" id="loginLink" class="nav-link">Login / Register</a>
+                <a href="#" id="logoutLink" class="nav-link" style="display: none;">Logout</a>
             </div>
         </nav>
     </header>
 
-    <main>
-        <div class="profile-container">
-            <div class="profile-header">
-                <h1>My Profile</h1>
-                <p>Manage your account information and preferences</p>
-            </div>
-
-            <div class="profile-form">
-                <div class="profile-section">
-                    <h3>Personal Information</h3>
-                    <form id="profileForm">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="profileName">Full Name</label>
-                                <input type="text" id="profileName" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="profileEmail">Email</label>
-                                <input type="email" id="profileEmail" required readonly>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="profilePhone">Phone Number</label>
-                                <input type="tel" id="profilePhone">
-                            </div>
-                            <div class="form-group">
-                                <label for="profileLicense">Driver's License Number</label>
-                                <input type="text" id="profileLicense">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="profileStreet">Street Address</label>
-                            <input type="text" id="profileStreet">
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="profileCity">City</label>
-                                <input type="text" id="profileCity">
-                            </div>
-                            <div class="form-group">
-                                <label for="profileState">State</label>
-                                <input type="text" id="profileState">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="profileZip">ZIP Code</label>
-                                <input type="text" id="profileZip">
-                            </div>
-                            <div class="form-group">
-                                <label for="profileCountry">Country</label>
-                                <input type="text" id="profileCountry" value="United States">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-primary">Update Profile</button>
-                    </form>
+    <main class="auth-container">
+        <div class="auth-card">
+            <h2>User Profile</h2>
+            <form id="profileForm">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" required>
                 </div>
-
-                <div class="profile-section">
-                    <h3>Change Password</h3>
-                    <form id="passwordForm">
-                        <div class="form-group">
-                            <label for="currentPassword">Current Password</label>
-                            <div class="password-input">
-                                <input type="password" id="currentPassword" required>
-                                <i class="fas fa-eye toggle-password"></i>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="newPassword">New Password</label>
-                            <div class="password-input">
-                                <input type="password" id="newPassword" required>
-                                <i class="fas fa-eye toggle-password"></i>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="confirmPassword">Confirm New Password</label>
-                            <div class="password-input">
-                                <input type="password" id="confirmPassword" required>
-                                <i class="fas fa-eye toggle-password"></i>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-primary">Change Password</button>
-                    </form>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" disabled>
                 </div>
-
-                <div class="profile-section">
-                    <h3>Account Actions</h3>
-                    <div class="account-actions">
-                        <button onclick="logout()" class="btn-danger">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </button>
-                    </div>
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="tel" id="phone">
                 </div>
-            </div>
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <input type="text" id="address">
+                </div>
+                <div class="form-group">
+                    <label for="licenseNumber">License Number</label>
+                    <input type="text" id="licenseNumber">
+                </div>
+                <button type="submit" class="btn-primary">Update Profile</button>
+            </form>
+        </div>
+
+        <div class="auth-card">
+            <h2>Change Password</h2>
+            <form id="passwordForm">
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <button type="submit" class="btn-primary">Change Password</button>
+            </form>
         </div>
     </main>
 
-    <footer>
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>About Us</h3>
-                <p>Your trusted partner for premium car rentals. We offer a wide range of vehicles to suit your needs.</p>
-            </div>
-            <div class="footer-section">
-                <h3>Contact</h3>
-                <p><i class="fas fa-phone"></i> +1 234 567 890</p>
-                <p><i class="fas fa-envelope"></i> info@carrental.com</p>
-            </div>
-            <div class="footer-section">
-                <h3>Follow Us</h3>
-                <div class="social-links">
-                    <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                </div>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2024 Car Rental System. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <script src="js/profile.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/app.js"></script>
 </body>
 </html> 
