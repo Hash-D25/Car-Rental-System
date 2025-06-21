@@ -5,7 +5,9 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js"
+    "start": "node app.js",
+    "add-cars": "node scripts/addCars.js",
+    "add-cars-bulk": "node scripts/addCarsBulk.js"
   },
   "keywords": [],
   "author": "",
