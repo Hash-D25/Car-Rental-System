@@ -50,17 +50,28 @@ exports.createPayment = async (req, res) => {
 // Create a new payment for a booking
 exports.createPaymentForBooking = async (req, res) => {
     try {
-        const { carId, carName, amount, status } = req.body;
+        const { carId, carName, amount } = req.body;
         if (!carId || !carName || !amount) {
             return res.status(400).json({ message: 'Missing required payment fields' });
         }
-        const payment = new Payment({
-            userId: req.userId, // Associate payment with user
+
+        // Check if a payment already exists for this booking
+        let payment = await Payment.findOne({ bookingId: carId });
+
+        if (payment) {
+            // If payment exists, return it
+            return res.status(200).json(payment);
+        }
+
+        // If no payment exists, create a new one
+        payment = new Payment({
+            userId: req.userId,
             bookingId: carId,
             carName,
             amount,
-            status: status || 'Pending'
+            status: 'Pending'
         });
+
         const newPayment = await payment.save();
         res.status(201).json(newPayment);
     } catch (error) {
@@ -84,5 +95,15 @@ exports.completePayment = async (req, res) => {
         res.json(payment);
     } catch (error) {
         res.status(400).json({ message: error.message });
+    }
+};
+
+// Admin: Get all payments
+exports.getAllPayments = async (req, res) => {
+    try {
+        const payments = await Payment.find({}).sort({ date: -1 });
+        res.json(payments);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 }; 

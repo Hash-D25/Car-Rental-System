@@ -3,118 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Car Rental System</title>
+    <title>Admin Dashboard - Car Rental</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/admin.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+
     <header>
         <nav>
-            <div class="logo"><i class="fas fa-car"></i> Car Rental</div>
+            <a href="../index.html" class="logo"><i class="fas fa-car"></i> Car Rental</a>
             <div class="nav-links">
                 <a href="../index.html">Home</a>
-                <a href="admin.html" class="active">Admin Dashboard</a>
-                <a href="#" id="logoutBtn">Logout</a>
+                <a href="reserved.html">Reserved</a>
+                <a href="rented.html" id="rentedLink">Rented</a>
+                <a href="favorites.html" id="favoritesLink" style="display: none;">Favorites</a>
+                <a href="payments.html">Payments</a>
+                <a href="admin.html" id="adminCarManagementLink" class="active">Car Management</a>
+            </div>
+            <div class="auth-links">
+                <a href="../profile.html" id="profileLink" style="display: none;">Profile</a>
+                <a href="#" id="logoutLink" style="display: none;">Logout</a>
             </div>
         </nav>
     </header>
 
     <main class="admin-container">
         <h1>Admin Dashboard</h1>
+
+        <!-- Stat Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-car"></i>
+                <div class="stat-info">
+                    <p>Total Cars</p>
+                    <h3 id="total-cars">0</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-car-side"></i>
+                <div class="stat-info">
+                    <p>Rented Cars</p>
+                    <h3 id="rented-cars">0</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-users"></i>
+                <div class="stat-info">
+                    <p>Total Users</p>
+                    <h3 id="total-users">0</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-dollar-sign"></i>
+                <div class="stat-info">
+                    <p>Total Revenue</p>
+                    <h3 id="total-revenue">$0</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="admin-tabs">
+            <button class="tab-link active" data-tab="dashboard">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </button>
+            <button class="tab-link" data-tab="car-management">
+                <i class="fas fa-cogs"></i> Car Management
+            </button>
+            <button class="tab-link" data-tab="user-management">
+                <i class="fas fa-users-cog"></i> User Management
+            </button>
+            <button class="tab-link" data-tab="reservations">
+                <i class="fas fa-calendar-check"></i> Reservations
+            </button>
+            <button class="tab-link" data-tab="payments">
+                <i class="fas fa-file-invoice-dollar"></i> Payments
+            </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="dashboard" class="tab-content active">
+            <h2>Welcome to your Dashboard</h2>
+            <p>Select a tab to view and manage different aspects of the rental service.</p>
+        </div>
+
+        <div id="car-management" class="tab-content">
+            <div class="admin-card">
+                <h2 id="formTitle">Add a New Car</h2>
+                <form id="carForm">
+                    <input type="hidden" id="carId">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="name">Car Name</label>
+                            <input type="text" id="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="brand">Brand</label>
+                            <input type="text" id="brand" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                             <select id="category" required>
+                                <option value="Sedan">Sedan</option>
+                                <option value="SUV">SUV</option>
+                                <option value="Hatchback">Hatchback</option>
+                                <option value="Convertible">Convertible</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="price">Price per day</label>
+                            <input type="number" id="price" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="transmission">Transmission</label>
+                             <select id="transmission" required>
+                                <option value="Automatic">Automatic</option>
+                                <option value="Manual">Manual</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="seats">Seats</label>
+                            <input type="number" id="seats" required>
+                        </div>
+                         <div class="form-group">
+                            <label for="fuelType">Fuel Type</label>
+                            <select id="fuelType" required>
+                                <option value="Petrol">Petrol</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="Electric">Electric</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="image">Image URL</label>
+                            <input type="text" id="image" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="description">Description</label>
+                            <textarea id="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Save Car</button>
+                        <button type="button" id="clearForm" class="btn-secondary">Clear</button>
+                    </div>
+                </form>
+            </div>
+            <div class="admin-card">
+                <h2>Existing Cars</h2>
+                <div id="carList"></div>
+            </div>
+        </div>
+
+        <div id="user-management" class="tab-content">
+            <div class="admin-card">
+                <h2>All Users</h2>
+                <div id="userList"></div>
+            </div>
+        </div>
+
+        <div id="reservations" class="tab-content">
+            <div class="admin-card">
+                <h2>All Reserved Cars</h2>
+                <div id="reservedCarsList"></div>
+            </div>
+        </div>
         
-        <div class="tabs">
-            <button class="tab-link active" data-tab="cars">Car Management</button>
-            <button class="tab-link" data-tab="bookings">All Bookings</button>
-            <button class="tab-link" data-tab="payments">All Payments</button>
-            <button class="tab-link" data-tab="users">User Management</button>
-        </div>
-
-        <div id="cars" class="tab-content active">
-            <h2>Car Management</h2>
-            <button id="addCarBtn" class="btn-primary"><i class="fas fa-plus"></i> Add New Car</button>
-            <div class="table-container" id="carsTableContainer"></div>
-        </div>
-
-        <div id="bookings" class="tab-content">
-            <h2>All Bookings</h2>
-            <div class="table-container" id="bookingsTableContainer"></div>
-        </div>
-
         <div id="payments" class="tab-content">
-            <h2>All Payments</h2>
-            <div class="table-container" id="paymentsTableContainer"></div>
-        </div>
-        
-        <div id="users" class="tab-content">
-            <h2>User Management</h2>
-            <div class="table-container" id="usersTableContainer"></div>
+            <div class="admin-card">
+                <h2>All Payments</h2>
+                <div id="paymentsList"></div>
+            </div>
         </div>
     </main>
 
-    <!-- Car Add/Edit Modal -->
-    <div id="carModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2 id="modalTitle">Add New Car</h2>
-            <form id="carForm">
-                <input type="hidden" id="carId">
-                <div class="form-group">
-                    <label for="name">Car Name</label>
-                    <input type="text" id="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="brand">Brand</label>
-                    <input type="text" id="brand" required>
-                </div>
-                <div class="form-group">
-                    <label for="price">Price per day</label>
-                    <input type="number" id="price" required>
-                </div>
-                <div class="form-group">
-                    <label for="image">Image URL</label>
-                    <input type="text" id="image" required>
-                </div>
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" rows="3" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="category">Category</label>
-                    <select id="category" required>
-                        <option value="Sedan">Sedan</option>
-                        <option value="SUV">SUV</option>
-                        <option value="Luxury">Luxury</option>
-                        <option value="Electric">Electric</option>
-                        <option value="Sports">Sports</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="transmission">Transmission</label>
-                    <select id="transmission" required>
-                        <option value="Automatic">Automatic</option>
-                        <option value="Manual">Manual</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="seats">Seats</label>
-                    <input type="number" id="seats" required>
-                </div>
-                <div class="form-group">
-                    <label for="fuelType">Fuel Type</label>
-                    <select id="fuelType" required>
-                        <option value="Petrol">Petrol</option>
-                        <option value="Diesel">Diesel</option>
-                        <option value="Electric">Electric</option>
-                        <option value="Hybrid">Hybrid</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-primary">Save Car</button>
-            </form>
-        </div>
-    </div>
-
-    <script src="../js/admin.js"></script>
+    <script src="../js/app.js" defer></script>
+    <script src="../js/admin.js" defer></script>
 </body>
 </html> 

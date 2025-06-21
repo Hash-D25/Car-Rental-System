@@ -3,77 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile - Car Rental</title>
-    <link rel="stylesheet" href="../css/styles.css">
-    <link rel="stylesheet" href="../css/auth.css">
+    <title>User Dashboard - Car Rental</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
     <header>
         <nav>
-            <div class="logo">
-                <i class="fas fa-car"></i>
-                Car Rental
-            </div>
+            <a href="index.html" class="logo"><i class="fas fa-car"></i> Car Rental</a>
             <div class="nav-links">
-                <a href="../index.html">Home</a>
-                <a href="reserved.html">Reserved</a>
-                <a href="rented.html">Rented</a>
-                <a href="favorites.html">Favorites</a>
-                <a href="payments.html">Payments</a>
+                <a href="index.html">Home</a>
+                <a href="pages/reserved.html">Reserved</a>
+                <a href="pages/rented.html" id="rentedLink">Rented</a>
+                <a href="pages/favorites.html" id="favoritesLink">Favorites</a>
+                <a href="pages/payments.html">Payments</a>
+                <a href="pages/admin.html" id="adminCarManagementLink" style="display: none;">Car Management</a>
             </div>
             <div class="auth-links">
-                <a href="profile.html" id="profileLink" class="nav-link" style="display: none;">Profile</a>
-                <a href="../login.html" id="loginLink" class="nav-link">Login / Register</a>
-                <a href="#" id="logoutLink" class="nav-link" style="display: none;">Logout</a>
+                <a href="profile.html" id="profileLink" class="active" style="display: none;">Profile</a>
+                <a href="login.html" id="loginLink">Login / Register</a>
+                <a href="#" id="logoutLink" style="display: none;">Logout</a>
             </div>
         </nav>
     </header>
 
-    <main class="auth-container">
-        <div class="auth-card">
-            <h2>User Profile</h2>
-            <form id="profileForm">
-                <div class="form-group">
-                    <label for="name">Name</label>
-                    <input type="text" id="name" required>
+    <main class="profile-dashboard-container">
+        <!-- Stat Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-calendar-check"></i>
+                <div class="stat-info">
+                    <p>Active Reservations</p>
+                    <h3 id="reservations-count">0</h3>
                 </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" disabled>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-history"></i>
+                <div class="stat-info">
+                    <p>Rental History</p>
+                    <h3 id="rented-history-count">0</h3>
                 </div>
-                <div class="form-group">
-                    <label for="phone">Phone</label>
-                    <input type="tel" id="phone">
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-wallet"></i>
+                <div class="stat-info">
+                    <p>Total Spent</p>
+                    <h3 id="total-spent">$0.00</h3>
                 </div>
-                <div class="form-group">
-                    <label for="address">Address</label>
-                    <input type="text" id="address">
-                </div>
-                <div class="form-group">
-                    <label for="licenseNumber">License Number</label>
-                    <input type="text" id="licenseNumber">
-                </div>
-                <button type="submit" class="btn-primary">Update Profile</button>
-            </form>
+            </div>
         </div>
 
-        <div class="auth-card">
-            <h2>Change Password</h2>
-            <form id="passwordForm">
-                <div class="form-group">
-                    <label for="currentPassword">Current Password</label>
-                    <input type="password" id="currentPassword" required>
+        <div class="profile-cards-wrapper">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>User Profile</h2>
+                    <p>Manage your personal information</p>
                 </div>
-                <div class="form-group">
-                    <label for="newPassword">New Password</label>
-                    <input type="password" id="newPassword" required>
+                <form id="profileForm">
+                    <div class="profile-details-view">
+                        <p><strong>Name:</strong> <span id="view-name"></span></p>
+                        <p><strong>Email:</strong> <span id="view-email"></span></p>
+                        <p><strong>Phone:</strong> <span id="view-phone"></span></p>
+                        <p><strong>Address:</strong> <span id="view-address"></span></p>
+                        <p><strong>License Number:</strong> <span id="view-licenseNumber"></span></p>
+                        <button type="button" id="editProfileBtn" class="btn-secondary">Edit Profile</button>
+                    </div>
+                    <div class="profile-details-edit" style="display: none;">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="text" id="phone" name="phone">
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <input type="text" id="address" name="address">
+                        </div>
+                        <div class="form-group">
+                            <label for="licenseNumber">License Number</label>
+                            <input type="text" id="licenseNumber" name="licenseNumber">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">Save Changes</button>
+                            <button type="button" id="cancelEditBtn" class="btn-secondary">Cancel</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>Change Password</h2>
+                    <p>Update your password for better security</p>
                 </div>
-                <button type="submit" class="btn-primary">Change Password</button>
-            </form>
+                <form id="passwordForm">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" name="currentPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" name="newPassword" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Change Password</button>
+                </form>
+            </div>
         </div>
     </main>
 
-    <script src="../js/auth.js"></script>
-    <script src="../js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html> 

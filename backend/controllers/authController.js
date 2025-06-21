@@ -1,5 +1,8 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const Payment = require('../models/Payment');
+const Car = require('../models/Car');
+const mongoose = require('mongoose');
 
 // Generate JWT Token
 const generateToken = (userId) => {
@@ -192,5 +195,45 @@ exports.requireAdmin = async (req, res, next) => {
     } catch (error) {
         console.error('Admin check error:', error);
         res.status(500).json({ message: 'Authorization failed', error: error.message });
+    }
+};
+
+exports.getUserDashboardStats = async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        // Get count of active reservations
+        const reservationsCount = await Car.countDocuments({
+            'bookingDetails.userId': userId,
+            isBooked: true
+        });
+        
+        // Get stats from completed payments
+        const paymentStats = await Payment.aggregate([
+            { $match: { userId: new mongoose.Types.ObjectId(userId), status: 'Completed' } },
+            {
+                $group: {
+                    _id: null,
+                    rentedHistoryCount: { $sum: 1 },
+                    totalSpent: { $sum: '$amount' }
+                }
+            }
+        ]);
+
+        const rentedHistoryCount = paymentStats.length > 0 ? paymentStats[0].rentedHistoryCount : 0;
+        const totalSpent = paymentStats.length > 0 ? paymentStats[0].totalSpent : 0;
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                reservationsCount,
+                rentedHistoryCount,
+                totalSpent
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching user dashboard stats:', error);
+        res.status(500).json({ message: 'Server error while fetching stats.' });
     }
 }; 

@@ -1,199 +1,283 @@
 document.addEventListener('DOMContentLoaded', () => {
     const API_URL = 'http://localhost:3000/api';
-    const token = localStorage.getItem('authToken');
-    const user = JSON.parse(localStorage.getItem('userData'));
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user'));
 
-    // DOM Elements
-    const carModal = document.getElementById('carModal');
-    const addCarBtn = document.getElementById('addCarBtn');
-    const closeModalBtn = carModal.querySelector('.close-btn');
-    const carForm = document.getElementById('carForm');
-    const modalTitle = document.getElementById('modalTitle');
-    
+    if (!token || !user || user.role !== 'admin') {
+        alert('Access Denied. Admins only.');
+        window.location.href = '../index.html';
+        return;
+    }
+
     const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
     };
 
-    // Admin access check
-    if (!user || user.role !== 'admin') {
-        alert('Access Denied: Admins only.');
-        window.location.href = '../index.html';
-        return;
-    }
+    const carForm = document.getElementById('carForm');
+    const carIdField = document.getElementById('carId');
+    const formTitle = document.getElementById('formTitle');
+    const clearFormBtn = document.getElementById('clearForm');
 
     // Tab switching logic
     const tabs = document.querySelectorAll('.tab-link');
+    const tabContents = document.querySelectorAll('.tab-content');
+
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
-            document.querySelector('.tab-link.active').classList.remove('active');
-            document.querySelector('.tab-content.active').classList.remove('active');
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
             tab.classList.add('active');
             document.getElementById(tab.dataset.tab).classList.add('active');
-            loadTabData(tab.dataset.tab);
         });
     });
 
-    // Load initial data for the first tab
-    loadTabData('cars');
-
-    function loadTabData(tabName) {
-        switch (tabName) {
-            case 'cars':
-                loadCars();
-                break;
-            case 'bookings':
-                loadBookings();
-                break;
-            case 'payments':
-                loadPayments();
-                break;
-            case 'users':
-                loadUsers();
-                break;
+    // --- DATA LOADING FUNCTIONS ---
+    
+    // Load dashboard stats
+    async function getDashboardStats() {
+        try {
+            const response = await fetch(`${API_URL}/admin/stats`, { headers });
+            const stats = await response.json();
+            document.getElementById('total-cars').textContent = stats.totalCars;
+            document.getElementById('rented-cars').textContent = stats.rentedCars;
+            document.getElementById('total-users').textContent = stats.totalUsers;
+            document.getElementById('total-revenue').textContent = `$${stats.totalRevenue.toFixed(2)}`;
+        } catch (error) {
+            console.error('Error fetching stats:', error);
         }
     }
 
-    // Generic fetch function
-    async function fetchData(endpoint) {
-        const response = await fetch(`${API_URL}/admin/${endpoint}`, { headers });
-        if (!response.ok) throw new Error('Failed to fetch data.');
-        return response.json();
-    }
-
-    // Load and display cars
-    async function loadCars() {
-        const cars = await fetchData('cars');
-        const columns = ['image', 'name', 'brand', 'price', 'category', 'isBooked', 'actions'];
-        const data = cars.map(car => ({
-            ...car,
-            image: `<img src="${car.image}" alt="${car.name}" class="car-image-preview">`,
-            isBooked: car.isBooked ? 'Yes' : 'No',
-            actions: `
-                <div class="action-btns">
-                    <button class="action-btn edit-btn" data-id="${car._id}"><i class="fas fa-edit"></i></button>
-                    <button class="action-btn delete-btn" data-id="${car._id}"><i class="fas fa-trash"></i></button>
-                </div>
-            `
-        }));
-        renderTable('carsTableContainer', columns, data);
-    }
-    
-    // Load and display bookings
-    async function loadBookings() {
-        const bookings = await fetchData('bookings');
-        const columns = ['name', 'brand', 'bookedBy', 'bookingDate', 'returnDate'];
-        const data = bookings.map(b => ({
-            ...b,
-            bookedBy: b.bookingDetails?.bookedBy || 'N/A',
-            bookingDate: new Date(b.bookingDetails?.bookingDate).toLocaleDateString(),
-            returnDate: new Date(b.bookingDetails?.returnDate).toLocaleDateString(),
-        }));
-        renderTable('bookingsTableContainer', columns, data);
-    }
-    
-    // Load and display payments
-    async function loadPayments() {
-        const payments = await fetchData('payments');
-        const columns = ['carName', 'amount', 'status', 'date'];
-        const data = payments.map(p => ({
-            ...p,
-            date: new Date(p.date).toLocaleString(),
-        }));
-        renderTable('paymentsTableContainer', columns, data);
-    }
-    
-    // Load and display users
-    async function loadUsers() {
-        const users = await fetchData('users');
-        renderTable('usersTableContainer', ['name', 'email', 'role', 'createdAt'], users.map(u=>({...u, createdAt: new Date(u.createdAt).toLocaleDateString()})));
-    }
-
-    // Generic table rendering function
-    function renderTable(containerId, columns, data) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = '<table><thead></thead><tbody></tbody></table>';
-        const thead = container.querySelector('thead');
-        const tbody = container.querySelector('tbody');
-        
-        thead.innerHTML = `<tr>${columns.map(c => `<th>${c.charAt(0).toUpperCase() + c.slice(1)}</th>`).join('')}</tr>`;
-        
-        tbody.innerHTML = data.map(row => 
-            `<tr>${columns.map(col => `<td>${row[col] || ''}</td>`).join('')}</tr>`
-        ).join('');
-    }
-
-    // Modal Handling
-    addCarBtn.onclick = () => {
-        modalTitle.textContent = 'Add New Car';
-        carForm.reset();
-        document.getElementById('carId').value = '';
-        carModal.style.display = 'block';
-    };
-
-    closeModalBtn.onclick = () => carModal.style.display = 'none';
-    window.onclick = (event) => {
-        if (event.target == carModal) {
-            carModal.style.display = 'none';
+    // Load all cars
+    async function getCars() {
+        try {
+            const response = await fetch(`${API_URL}/admin/cars`, { headers });
+            const cars = await response.json();
+            const carList = document.getElementById('carList');
+            carList.innerHTML = '';
+            cars.forEach(car => {
+                const carItem = document.createElement('div');
+                carItem.className = 'car-item';
+                carItem.innerHTML = `
+                    <h4>${car.name}</h4>
+                    <p>${car.brand} - ${car.category}</p>
+                    <p><strong>Price:</strong> $${car.price}/day</p>
+                    <p><strong>Status:</strong> ${car.isBooked ? 'Rented' : 'Available'}</p>
+                    <div class="car-item-actions">
+                        <button class="btn-secondary edit-btn" data-id="${car._id}">Edit</button>
+                        <button class="btn-danger delete-btn" data-id="${car._id}">Delete</button>
+                    </div>
+                `;
+                carList.appendChild(carItem);
+            });
+        } catch (error) {
+            console.error('Error fetching cars:', error);
         }
-    };
+    }
 
-    // Car Form Submission (Add/Edit)
+    // Load all users
+    async function getUsers() {
+        try {
+            const response = await fetch(`${API_URL}/admin/users`, { headers });
+            const users = await response.json();
+            const userList = document.getElementById('userList');
+            userList.innerHTML = `
+                <table class="list-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${users.map(user => `
+                            <tr>
+                                <td>${user.name}</td>
+                                <td>${user.email}</td>
+                                <td>${user.phone || 'N/A'}</td>
+                                <td class="${user.role === 'admin' ? 'role-admin' : ''}">${user.role}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    }
+
+    // Load all reservations
+    async function getReservations() {
+        try {
+            const response = await fetch(`${API_URL}/admin/cars/reserved`, { headers });
+            const reservedCars = await response.json();
+            const reservedCarsList = document.getElementById('reservedCarsList');
+            if (reservedCars.length === 0) {
+                reservedCarsList.innerHTML = '<p>No active reservations.</p>';
+                return;
+            }
+            reservedCarsList.innerHTML = `
+                <table class="list-table">
+                    <thead>
+                        <tr>
+                            <th>Car</th>
+                            <th>Booked By</th>
+                            <th>Start Date</th>
+                            <th>Return Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${reservedCars.map(car => `
+                            <tr>
+                                <td>${car.name}</td>
+                                <td>${car.bookingDetails.bookedBy}</td>
+                                <td>${new Date(car.bookingDetails.bookingDate).toLocaleDateString()}</td>
+                                <td>${new Date(car.bookingDetails.returnDate).toLocaleDateString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            console.error('Error fetching reservations:', error);
+        }
+    }
+
+    // Load all payments
+    async function getPayments() {
+         try {
+            const response = await fetch(`${API_URL}/admin/payments`, { headers });
+            const payments = await response.json();
+            const paymentsList = document.getElementById('paymentsList');
+            if (payments.length === 0) {
+                paymentsList.innerHTML = '<p>No payments found.</p>';
+                return;
+            }
+            paymentsList.innerHTML = `
+                <table class="list-table">
+                    <thead>
+                        <tr>
+                            <th>Car Name</th>
+                            <th>User Email</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${payments.map(payment => `
+                            <tr>
+                                <td>${payment.carName}</td>
+                                <td>${payment.userEmail}</td>
+                                <td>$${payment.amount.toFixed(2)}</td>
+                                <td>${payment.status}</td>
+                                <td>${new Date(payment.paymentDate).toLocaleDateString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            console.error('Error fetching payments:', error);
+        }
+    }
+
+    // --- FORM AND EVENT HANDLERS ---
+    
+    // Handle Add/Update Car
     carForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const id = document.getElementById('carId').value;
+        const carId = carIdField.value;
+        const method = carId ? 'PUT' : 'POST';
+        const url = carId ? `${API_URL}/admin/cars/${carId}` : `${API_URL}/admin/cars`;
         const carData = {
             name: document.getElementById('name').value,
             brand: document.getElementById('brand').value,
-            price: document.getElementById('price').value,
-            image: document.getElementById('image').value,
             description: document.getElementById('description').value,
             category: document.getElementById('category').value,
+            price: document.getElementById('price').value,
             transmission: document.getElementById('transmission').value,
             seats: document.getElementById('seats').value,
             fuelType: document.getElementById('fuelType').value,
+            image: document.getElementById('image').value,
         };
 
-        const url = id ? `${API_URL}/admin/cars/${id}` : `${API_URL}/admin/cars`;
-        const method = id ? 'PUT' : 'POST';
-
-        const response = await fetch(url, { method, headers, body: JSON.stringify(carData) });
-
-        if (response.ok) {
-            carModal.style.display = 'none';
-            loadCars();
-        } else {
-            alert('Failed to save car.');
+        try {
+            const response = await fetch(url, { method, headers, body: JSON.stringify(carData) });
+            if (response.ok) {
+                clearForm();
+                getCars();
+                getDashboardStats(); // Refresh stats after adding/updating car
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.message}`);
+            }
+        } catch (error) {
+            console.error('Error saving car:', error);
         }
     });
 
-    // Event delegation for Edit/Delete buttons
-    document.querySelector('.admin-container').addEventListener('click', async (e) => {
-        if (e.target.closest('.edit-btn')) {
-            const id = e.target.closest('.edit-btn').dataset.id;
-            const response = await fetch(`${API_URL}/cars/${id}`);
+    // Handle Edit/Delete Buttons
+    document.getElementById('carList').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('edit-btn')) {
+            const carId = e.target.dataset.id;
+            const response = await fetch(`${API_URL}/cars/${carId}`);
             const car = await response.json();
             
-            modalTitle.textContent = 'Edit Car';
-            Object.keys(car).forEach(key => {
-                const el = document.getElementById(key);
-                if(el) el.value = car[key];
-            });
-            document.getElementById('carId').value = car._id;
-            carModal.style.display = 'block';
+            formTitle.textContent = 'Edit Car';
+            carIdField.value = car._id;
+            document.getElementById('name').value = car.name;
+            document.getElementById('brand').value = car.brand;
+            document.getElementById('description').value = car.description;
+            document.getElementById('category').value = car.category;
+            document.getElementById('price').value = car.price;
+            document.getElementById('transmission').value = car.transmission;
+            document.getElementById('seats').value = car.seats;
+            document.getElementById('fuelType').value = car.fuelType;
+            document.getElementById('image').value = car.image;
+            
+            window.scrollTo(0, 0); // Scroll to top to see the form
         }
 
-        if (e.target.closest('.delete-btn')) {
-            const id = e.target.closest('.delete-btn').dataset.id;
+        if (e.target.classList.contains('delete-btn')) {
+            const carId = e.target.dataset.id;
             if (confirm('Are you sure you want to delete this car?')) {
-                await fetch(`${API_URL}/admin/cars/${id}`, { method: 'DELETE', headers });
-                loadCars();
+                try {
+                    const response = await fetch(`${API_URL}/admin/cars/${carId}`, { method: 'DELETE', headers });
+                    if(response.ok) {
+                        getCars();
+                        getDashboardStats(); // Refresh stats
+                    } else {
+                        alert('Failed to delete car.');
+                    }
+                } catch (error) {
+                    console.error('Error deleting car:', error);
+                }
             }
         }
     });
-    
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.clear();
-        window.location.href = '../login.html';
-    });
+
+    function clearForm() {
+        formTitle.textContent = 'Add a New Car';
+        carForm.reset();
+        carIdField.value = '';
+    }
+
+    if(clearFormBtn) {
+        clearFormBtn.addEventListener('click', clearForm);
+    }
+
+    // --- INITIALIZATION ---
+    function initializeDashboard() {
+        getDashboardStats();
+        getCars();
+        getUsers();
+        getReservations();
+        getPayments();
+    }
+
+    initializeDashboard();
 }); 

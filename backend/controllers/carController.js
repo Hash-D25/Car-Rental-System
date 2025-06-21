@@ -306,3 +306,36 @@ exports.freeUpCars = async () => {
     console.error("Error freeing up cars:", error);
   }
 };
+
+// Admin: Get all reserved cars
+exports.getAllReservedCars = async (req, res) => {
+    try {
+        const reservedCars = await Car.find({ isBooked: true });
+        res.json(reservedCars);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Admin: Get all rented cars
+exports.getAllRentedCars = async (req, res) => {
+    try {
+        const rentedCars = await Car.find({ isBooked: true }); // Simplified for admin
+        res.json(rentedCars);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Admin: Update a car
+exports.updateCar = async (req, res) => {
+    try {
+        const car = await Car.findByIdAndUpdate(req.params.carId, req.body, { new: true });
+        if (!car) {
+            return res.status(404).json({ message: 'Car not found' });
+        }
+        res.json(car);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};

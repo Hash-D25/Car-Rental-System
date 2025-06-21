@@ -74,4 +74,4 @@ carSchema.pre(
   }
 );
 
-module.exports = mongoose.model("Car", carSchema);
+module.exports = mongoose.models.Car || mongoose.model("Car", carSchema);

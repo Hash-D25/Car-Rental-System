@@ -353,4 +353,45 @@
     .footer-content {
         flex-direction: column;
     }
+}
+
+.reserved-card .car-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.reserved-card .car-detail p {
+    margin: 0.5rem 0;
+}
+
+.reserved-card .actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-cancel {
+    background-color: var(--error-color);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-cancel:hover {
+    background-color: #c0392b;
+}
+
+.payment-info {
+    font-weight: bold;
+}
+.payment-info.paid {
+    color: var(--success-color);
+}
+.payment-info.pending {
+    color: #f39c12;
 } 

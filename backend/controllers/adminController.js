@@ -64,6 +64,34 @@ exports.getAllUsers = async (req, res) => {
         const users = await User.find().select('-password');
         res.json(users);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error fetching users:', error);
+        res.status(500).send('Server error');
+    }
+};
+
+// Get dashboard stats
+exports.getDashboardStats = async (req, res) => {
+    try {
+        const totalUsers = await User.countDocuments();
+        const totalCars = await Car.countDocuments();
+        const rentedCars = await Car.countDocuments({ isBooked: true });
+        
+        const totalPayments = await Payment.aggregate([
+            { $match: { status: 'Completed' } },
+            { $group: { _id: null, totalRevenue: { $sum: '$amount' } } }
+        ]);
+
+        const totalRevenue = totalPayments.length > 0 ? totalPayments[0].totalRevenue : 0;
+
+        res.json({
+            totalUsers,
+            totalCars,
+            rentedCars,
+            availableCars: totalCars - rentedCars,
+            totalRevenue
+        });
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        res.status(500).send('Server error');
     }
 }; 

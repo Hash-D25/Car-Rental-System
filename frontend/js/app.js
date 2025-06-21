@@ -21,7 +21,7 @@ let currentUser = null;
 
 // Helper to get authorization headers
 function getAuthHeaders() {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     return {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -35,7 +35,7 @@ function checkAuth() {
         // Redirect to login if not authenticated
         const currentPage = window.location.pathname.split('/').pop();
         if (currentPage !== 'login.html' && currentPage !== 'register.html') {
-            window.location.href = 'login.html';
+            window.location.href = '/frontend/login.html';
         }
         return false;
     }
@@ -44,7 +44,7 @@ function checkAuth() {
 
 // Get current user
 function getCurrentUser() {
-    const userData = localStorage.getItem('userData');
+    const userData = localStorage.getItem('user');
     if (userData) {
         currentUser = JSON.parse(userData);
     }
@@ -54,39 +54,29 @@ function getCurrentUser() {
 // Logout function
 function logout() {
     localStorage.removeItem('token');
-    localStorage.removeItem('userData');
+    localStorage.removeItem('user');
     localStorage.removeItem('favoriteCars');
-    window.location.href = 'login.html';
+    window.location.href = '/frontend/login.html';
 }
 
 // Update navigation with user info and logout
 function updateNavigation() {
     const user = getCurrentUser();
     const navLinks = document.querySelector('.nav-links');
-    
-    if (user && navLinks) {
-        // Add Admin dashboard link if user is an admin
-        if (user.role === 'admin' && !document.querySelector('a[href="pages/admin.html"]')) {
-            const adminLink = document.createElement('a');
-            adminLink.href = 'pages/admin.html';
-            adminLink.textContent = 'Admin';
-            // Insert it before the 'Reserved' link
-            navLinks.insertBefore(adminLink, navLinks.children[1]);
-        }
+    const adminCarManagementLink = document.getElementById('adminCarManagementLink');
+    const favoritesLink = document.getElementById('favoritesLink');
+    const rentedLink = document.getElementById('rentedLink');
 
-        // Add user menu if it doesn't exist
-        if (!document.querySelector('.user-menu')) {
-            const userMenu = document.createElement('div');
-            userMenu.className = 'user-menu';
-            userMenu.innerHTML = `
-                <div class="user-info">
-                    <a href="profile.html" class="profile-link">Welcome, ${user.name}</a>
-                    <button onclick="logout()" class="logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </button>
-                </div>
-            `;
-            navLinks.appendChild(userMenu);
+    if (user && navLinks) {
+        if (user.role === 'admin') {
+            if (favoritesLink) favoritesLink.style.display = 'none';
+            if (rentedLink) rentedLink.style.display = 'inline-block';
+            if (adminCarManagementLink) adminCarManagementLink.style.display = 'inline-block';
+        } else {
+            // For non-admin users
+            if (adminCarManagementLink) adminCarManagementLink.style.display = 'none';
+            if (favoritesLink) favoritesLink.style.display = 'inline-block';
+            if (rentedLink) rentedLink.style.display = 'inline-block';
         }
     }
 }
@@ -200,7 +190,7 @@ function displayCars(carsToDisplay, container) {
                 </div>
                 <p class="car-price">$${car.price}/day</p>
                 <div class="card-actions">
-                    <button onclick="openBookingModal('${car._id}')" ${car.isBooked ? 'disabled' : ''}>
+                    <button class="btn-book" onclick="openBookingModal('${car._id}')" ${car.isBooked ? 'disabled' : ''}>
                         ${car.isBooked ? 'Reserved' : 'Book Now'}
                     </button>
                     <button class="favorite-btn" onclick="toggleFavorite('${car._id}')">
@@ -212,7 +202,6 @@ function displayCars(carsToDisplay, container) {
         container.appendChild(carCard);
 
         if (container === reservedCarsGrid) {
-            // Add booking details for reserved cars
             if (car.bookingDetails) {
                 const startDate = new Date(car.bookingDetails.bookingDate).toLocaleDateString();
                 const endDate = new Date(car.bookingDetails.returnDate).toLocaleDateString();
@@ -230,16 +219,35 @@ function displayCars(carsToDisplay, container) {
             }
             
             const payment = allPayments.find(p => p.bookingId === car._id);
-            if (!payment) {
-                carCard.innerHTML += `<button class="btn-primary" onclick='payForCar(${JSON.stringify(car)})'>Pay Now</button>`;
-                carCard.innerHTML += `<button class="btn-danger" onclick='cancelBooking("${car._id}")'>Cancel</button>`;
-            } else if (payment.status === 'Pending') {
-                carCard.innerHTML += `<div class="payment-status pending">Payment Pending</div>`;
-                carCard.innerHTML += `<button class="btn-primary" onclick='completePayment("${payment._id}")'>Complete Payment</button>`;
-                carCard.innerHTML += `<button class="btn-danger" onclick='cancelBooking("${car._id}")'>Cancel</button>`;
-            } else if (payment.status === 'Completed') {
-                carCard.innerHTML += `<div class="payment-status completed">Payment Completed</div>`;
+            const paymentActions = document.createElement('div');
+            paymentActions.className = 'payment-actions';
+            const currentUser = getCurrentUser();
+
+            const isOwner = currentUser && car.bookingDetails && currentUser._id === car.bookingDetails.userId;
+            const isAdmin = currentUser && currentUser.role === 'admin';
+
+            if (isOwner) {
+                if (payment) {
+                    if (payment.status === 'Pending') {
+                        paymentActions.innerHTML = `
+                            <button class="btn-primary" onclick='completePayment("${payment._id}")'>Complete Payment</button>
+                            <button class="btn-danger" onclick='cancelBooking("${car._id}")'>Cancel</button>
+                        `;
+                    } else if (payment.status === 'Completed') {
+                        paymentActions.innerHTML = `<div class="payment-status completed">Payment Completed</div>`;
+                    }
+                } else {
+                    paymentActions.innerHTML = `
+                        <button class="btn-primary" onclick='payForCar(${JSON.stringify(car)})'>Pay Now</button>
+                        <button class="btn-danger" onclick='cancelBooking("${car._id}")'>Cancel</button>
+                    `;
+                }
+            } else if (isAdmin) {
+                let statusText = payment ? payment.status : 'Not Initiated';
+                paymentActions.innerHTML = `<div class="payment-status">Payment: ${statusText}</div>`;
             }
+
+            carCard.appendChild(paymentActions);
         }
     });
 }
@@ -336,101 +344,63 @@ function setupModal() {
         });
     }
 
-    form.onsubmit = async (e) => {
-        e.preventDefault();
-        const carId = form.dataset.carId;
-        
-        // Get current user
-        const user = getCurrentUser();
-        if (!user) {
-            showError('Please log in to book a car.');
-            return;
-        }
-        
-        // Get form values
-        const name = document.getElementById('name').value;
-        const email = document.getElementById('email').value;
-        const startDate = document.getElementById('startDate').value;
-        const returnDate = document.getElementById('returnDate').value;
-
-        // Validate dates
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const start = new Date(startDate);
-        const end = new Date(returnDate);
-        start.setHours(0, 0, 0, 0);
-        end.setHours(0, 0, 0, 0);
-
-        if (start < today) {
-            showError('Start date cannot be in the past.');
-            return;
-        }
-
-        if (end < today) {
-            showError('Return date cannot be in the past.');
-            return;
-        }
-
-        if (end < start) {
-            showError('Return date cannot be before start date.');
-            return;
-        }
-
-        const formData = {
-            name,
-            email,
-            startDate,
-            returnDate
-        };
-
-        try {
-            const token = localStorage.getItem('authToken');
-            const response = await fetch(`${API_URL}/cars/${carId}/book`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(formData)
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                showSuccess(`Car reserved successfully! You can now pay for your booking in the Reserved section.`);
-                modal.style.display = 'none';
-                form.reset();
-                window.location.href = 'pages/reserved.html'; // Redirect to reserved page
-            } else {
-                const error = await response.json();
-                showError(error.message || 'Failed to book the car. Please try again.');
+    if (bookingForm) {
+        bookingForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!selectedCarId) {
+                showError("No car selected for booking.");
+                return;
             }
-        } catch (error) {
-            console.error('Error booking car:', error);
-            showError('Failed to book the car. Please try again.');
-        }
-    };
+
+            const bookingData = {
+                carId: selectedCarId,
+                name: document.getElementById("name").value,
+                email: document.getElementById("email").value,
+                startDate: document.getElementById("startDate").value,
+                returnDate: document.getElementById("returnDate").value,
+            };
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_URL}/cars/${bookingData.carId}/book`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(bookingData),
+                });
+
+                if (response.ok) {
+                    showSuccess("Car booked successfully!");
+                    bookingModal.style.display = "none";
+                    loadCars(); // Refresh car list
+                } else {
+                    const errorData = await response.json();
+                    showError(errorData.message || "Failed to book car.");
+                }
+            } catch (error) {
+                console.error("Booking error:", error);
+                showError("An error occurred while booking the car.");
+            }
+        });
+    }
 }
 
 function openBookingModal(carId) {
-    const modal = document.getElementById('bookingModal');
-    const form = document.getElementById('bookingForm');
-    if (!modal || !form) return;
-    
-    form.dataset.carId = carId;
-    
-    // Pre-fill form with user data
-    const user = getCurrentUser();
-    if (user) {
-        const nameInput = document.getElementById('name');
-        const emailInput = document.getElementById('email');
-        if (nameInput) nameInput.value = user.name;
-        if (emailInput) emailInput.value = user.email;
+    const car = allCars.find(c => c._id === carId);
+    if (!car) {
+        console.error('Car not found for booking');
+        return;
     }
-    
-    modal.style.display = 'block';
-    
-    // Update booking summary when modal opens
+    selectedCarId = carId;
+
+    // Pre-fill form with user data if available
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+        document.getElementById('name').value = currentUser.name;
+        document.getElementById('email').value = currentUser.email;
+    }
+
     updateBookingSummary();
+    bookingModal.style.display = "block";
 }
 
 // Update booking summary with total cost
@@ -473,33 +443,41 @@ function updateBookingSummary() {
 // Load reserved cars
 async function loadReservedCars() {
     try {
+        const user = getCurrentUser();
+        const carsUrl = user.role === 'admin' ? `${API_URL}/admin/cars/reserved` : `${API_URL}/cars/reserved`;
+        const paymentsUrl = user.role === 'admin' ? `${API_URL}/admin/payments` : `${API_URL}/payments`;
         const headers = getAuthHeaders();
+
         const [carsResponse, paymentsResponse] = await Promise.all([
-            fetch(`${API_URL}/cars/reserved`, { headers }),
-            fetch(`${API_URL}/payments`, { headers })
+            fetch(carsUrl, { headers }),
+            fetch(paymentsUrl, { headers }),
         ]);
+
         if (!carsResponse.ok) throw new Error('Failed to fetch reserved cars');
         if (!paymentsResponse.ok) throw new Error('Failed to fetch payments');
+
         const cars = await carsResponse.json();
         allPayments = await paymentsResponse.json();
         displayCars(cars, reservedCarsGrid);
     } catch (error) {
         console.error('Error loading reserved cars:', error);
-        showError('Failed to load reserved cars. Please try again later.');
     }
 }
 
 // Load rented cars
 async function loadRentedCars() {
     try {
+        const user = getCurrentUser();
+        const url = user.role === 'admin' ? `${API_URL}/admin/cars/rented` : `${API_URL}/cars/rented`;
         const headers = getAuthHeaders();
-        const response = await fetch(`${API_URL}/cars/rented`, { headers });
+        const response = await fetch(url, { headers });
+
         if (!response.ok) throw new Error('Failed to fetch rented cars');
+        
         const cars = await response.json();
         displayCars(cars, rentedCarsGrid);
     } catch (error) {
         console.error('Error loading rented cars:', error);
-        showError('Failed to load rented cars. Please try again later.');
     }
 }
 
@@ -532,14 +510,20 @@ async function loadFavoriteCars() {
 // Load payments
 async function loadPayments(filters = {}) {
     try {
+        const user = getCurrentUser();
+        const url = user.role === 'admin' ? `${API_URL}/admin/payments` : `${API_URL}/payments`;
         const queryParams = new URLSearchParams(filters).toString();
-        const response = await fetch(`${API_URL}/payments?${queryParams}`, { headers: getAuthHeaders() });
+        const fullUrl = `${url}?${queryParams}`;
+        
+        const headers = getAuthHeaders();
+        const response = await fetch(fullUrl, { headers });
+
         if (!response.ok) throw new Error('Failed to fetch payments');
+        
         const payments = await response.json();
         displayPayments(payments);
     } catch (error) {
-        console.error('Error loading payments:', error);
-        showError('Failed to load payments. Please try again later.');
+        console.error('Error fetching payments:', error);
     }
 }
 
@@ -735,11 +719,9 @@ async function payForCar(car) {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify({
-                bookingId: car._id, // Use car._id as bookingId
                 carId: car._id,
                 carName: car.name,
                 amount,
-                status: 'Pending'
             })
         });
         
