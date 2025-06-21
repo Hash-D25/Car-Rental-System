@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const carRoutes = require('./routes/carRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const carController = require('./controllers/carController');
 require('dotenv').config();
 
 const app = express();
@@ -27,6 +28,9 @@ mongoose.connect(DB_URI)
 // Routes
 app.use('/api/cars', carRoutes);
 app.use('/api/payments', paymentRoutes);
+
+// Automated job to free up cars
+setInterval(carController.freeUpCars, 60 * 60 * 1000); // every hour
 
 // Start server
 app.listen(PORT, () => {

@@ -14,6 +14,9 @@ router.post("/", carController.createCar);
 // Book a car
 router.post("/:carId/book", carController.bookCar);
 
+// Cancel a booking
+router.post("/:carId/cancel", carController.cancelBooking);
+
 // Update car availability
 router.patch("/:carId/availability", carController.updateCarAvailability);
 

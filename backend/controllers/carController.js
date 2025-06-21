@@ -216,3 +216,75 @@ exports.getCarById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Cancel a booking
+exports.cancelBooking = async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.carId);
+
+    if (!car) {
+      return res.status(404).json({ message: "Car not found" });
+    }
+
+    if (!car.isBooked) {
+      return res.status(400).json({ message: "Car is not booked" });
+    }
+
+    car.isBooked = false;
+    car.bookingDetails = undefined;
+    await car.save();
+
+    // Find and delete any pending payment associated with this booking
+    await Payment.deleteOne({ bookingId: req.params.carId, status: "Pending" });
+
+    res.json({ message: "Booking canceled successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Function to automatically free up cars after rental period
+exports.freeUpCars = async () => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const carsToFree = await Car.find({
+      isBooked: true,
+      "bookingDetails.returnDate": { $lt: today },
+    });
+
+    if (carsToFree.length === 0) {
+      // No cars with past return date found, so we can exit early.
+      return;
+    }
+
+    for (const car of carsToFree) {
+      // Check if there is a completed payment for this booking
+      const payment = await Payment.findOne({
+        bookingId: car._id.toString(),
+        status: "Completed",
+      });
+
+      if (payment) {
+        car.isBooked = false;
+        car.bookingDetails = undefined;
+        await car.save();
+        console.log(`Freed up car: ${car.name}`);
+      } else {
+        // If no payment is found and the booking date has passed, we should also free the car
+        const bookingDate = new Date(car.bookingDetails.bookingDate);
+        if (bookingDate < today) {
+          car.isBooked = false;
+          car.bookingDetails = undefined;
+          await car.save();
+          console.log(
+            `Freed up unpaid car with past booking date: ${car.name}`
+          );
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error freeing up cars:", error);
+  }
+};

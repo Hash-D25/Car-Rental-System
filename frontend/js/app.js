@@ -124,9 +124,11 @@ function displayCars(carsToDisplay, container) {
             const payment = allPayments.find(p => p.bookingId === car._id);
             if (!payment) {
                 carCard.innerHTML += `<button class="btn-primary" onclick='payForCar(${JSON.stringify(car)})'>Pay Now</button>`;
+                carCard.innerHTML += `<button class="btn-danger" onclick='cancelBooking("${car._id}")'>Cancel</button>`;
             } else if (payment.status === 'Pending') {
                 carCard.innerHTML += `<div class="payment-status pending">Payment Pending</div>`;
                 carCard.innerHTML += `<button class="btn-primary" onclick='completePayment("${payment._id}")'>Complete Payment</button>`;
+                carCard.innerHTML += `<button class="btn-danger" onclick='cancelBooking("${car._id}")'>Cancel</button>`;
             } else if (payment.status === 'Completed') {
                 carCard.innerHTML += `<div class="payment-status completed">Payment Completed</div>`;
             }
@@ -642,5 +644,29 @@ async function completePayment(paymentId) {
     } catch (error) {
         console.error('Complete payment error:', error);
         showError('Failed to complete payment. Please try again.');
+    }
+}
+
+// Cancel a booking
+async function cancelBooking(carId) {
+    if (!confirm('Are you sure you want to cancel this booking?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/cars/${carId}/cancel`, {
+            method: 'POST',
+        });
+
+        if (response.ok) {
+            showSuccess('Booking canceled successfully!');
+            loadReservedCars(); // Refresh the list of reserved cars
+        } else {
+            const error = await response.json();
+            showError(error.message || 'Failed to cancel the booking.');
+        }
+    } catch (error) {
+        console.error('Error canceling booking:', error);
+        showError('An error occurred while canceling the booking.');
     }
 }
