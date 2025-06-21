@@ -104,14 +104,31 @@ function displayCars(carsToDisplay, container) {
         container.appendChild(carCard);
 
         if (container === reservedCarsGrid) {
+            // Add booking details for reserved cars
+            if (car.bookingDetails) {
+                const startDate = new Date(car.bookingDetails.bookingDate).toLocaleDateString();
+                const endDate = new Date(car.bookingDetails.returnDate).toLocaleDateString();
+                const days = Math.max(1, Math.ceil((new Date(car.bookingDetails.returnDate) - new Date(car.bookingDetails.bookingDate)) / (1000 * 60 * 60 * 24)));
+                const totalCost = car.price * days;
+                
+                carCard.innerHTML += `
+                    <div class="booking-info">
+                        <p><strong>Booked by:</strong> ${car.bookingDetails.bookedBy}</p>
+                        <p><strong>From:</strong> ${startDate} <strong>To:</strong> ${endDate}</p>
+                        <p><strong>Duration:</strong> ${days} day${days > 1 ? 's' : ''}</p>
+                        <p><strong>Total Cost:</strong> $${totalCost.toFixed(2)}</p>
+                    </div>
+                `;
+            }
+            
             const payment = allPayments.find(p => p.bookingId === car._id);
             if (!payment) {
                 carCard.innerHTML += `<button class="btn-primary" onclick='payForCar(${JSON.stringify(car)})'>Pay Now</button>`;
             } else if (payment.status === 'Pending') {
-                carCard.innerHTML += `<div class="payment-status pending">Pending</div>`;
+                carCard.innerHTML += `<div class="payment-status pending">Payment Pending</div>`;
                 carCard.innerHTML += `<button class="btn-primary" onclick='completePayment("${payment._id}")'>Complete Payment</button>`;
             } else if (payment.status === 'Completed') {
-                carCard.innerHTML += `<div class="payment-status completed">Paid</div>`;
+                carCard.innerHTML += `<div class="payment-status completed">Payment Completed</div>`;
             }
         }
     });
@@ -181,13 +198,72 @@ function setupModal() {
         }
     };
 
+    // Set minimum date for startDate and returnDate input to today
+    const startDateInput = document.getElementById('startDate');
+    const returnDateInput = document.getElementById('returnDate');
+    if (startDateInput && returnDateInput) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const minDate = `${yyyy}-${mm}-${dd}`;
+        startDateInput.setAttribute('min', minDate);
+        returnDateInput.setAttribute('min', minDate);
+
+        // When start date changes, update return date's min
+        startDateInput.addEventListener('change', () => {
+            returnDateInput.setAttribute('min', startDateInput.value);
+            // If return date is before new start date, reset it
+            if (returnDateInput.value < startDateInput.value) {
+                returnDateInput.value = startDateInput.value;
+            }
+            updateBookingSummary();
+        });
+
+        // When return date changes, update booking summary
+        returnDateInput.addEventListener('change', () => {
+            updateBookingSummary();
+        });
+    }
+
     form.onsubmit = async (e) => {
         e.preventDefault();
         const carId = form.dataset.carId;
+        
+        // Get form values
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const startDate = document.getElementById('startDate').value;
+        const returnDate = document.getElementById('returnDate').value;
+
+        // Validate dates
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const start = new Date(startDate);
+        const end = new Date(returnDate);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+
+        if (start < today) {
+            showError('Start date cannot be in the past.');
+            return;
+        }
+
+        if (end < today) {
+            showError('Return date cannot be in the past.');
+            return;
+        }
+
+        if (end < start) {
+            showError('Return date cannot be before start date.');
+            return;
+        }
+
         const formData = {
-            name: document.getElementById('name').value,
-            email: document.getElementById('email').value,
-            returnDate: document.getElementById('returnDate').value
+            name,
+            email,
+            startDate,
+            returnDate
         };
 
         try {
@@ -201,7 +277,7 @@ function setupModal() {
 
             if (response.ok) {
                 const result = await response.json();
-                showSuccess(`Booking confirmed! Booking ID: ${result.id}`);
+                showSuccess(`Car reserved successfully! You can now pay for your booking in the Reserved section.`);
                 modal.style.display = 'none';
                 form.reset();
                 window.location.href = 'pages/reserved.html'; // Redirect to reserved page
@@ -223,6 +299,46 @@ function openBookingModal(carId) {
     
     form.dataset.carId = carId;
     modal.style.display = 'block';
+    
+    // Update booking summary when modal opens
+    updateBookingSummary();
+}
+
+// Update booking summary with total cost
+function updateBookingSummary() {
+    const startDateInput = document.getElementById('startDate');
+    const returnDateInput = document.getElementById('returnDate');
+    const carId = document.getElementById('bookingForm').dataset.carId;
+    const summary = document.getElementById('bookingDetails');
+
+    if (!startDateInput || !returnDateInput || !carId || !summary) return;
+
+    const startDate = startDateInput.value;
+    const returnDate = returnDateInput.value;
+
+    if (!startDate || !returnDate) {
+        summary.innerHTML = '<p>Please select start and return dates to see total cost.</p>';
+        return;
+    }
+
+    const car = allCars.find(c => c._id === carId);
+    if (!car) {
+        summary.innerHTML = '<p>Car information not available.</p>';
+        return;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(returnDate);
+    const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+    const totalCost = car.price * days;
+
+    summary.innerHTML = `
+        <p><strong>Car:</strong> ${car.name}</p>
+        <p><strong>Daily Rate:</strong> $${car.price}</p>
+        <p><strong>Duration:</strong> ${days} day${days > 1 ? 's' : ''}</p>
+        <p><strong>Total Cost:</strong> $${totalCost.toFixed(2)}</p>
+        <p><em>Note: This is a reservation. Payment will be handled separately after booking.</em></p>
+    `;
 }
 
 // Load reserved cars
@@ -367,16 +483,115 @@ function toggleFavorite(carId) {
 
 // Utility functions
 function showError(message) {
-    alert(message); // You can replace this with a better UI notification
+    showNotification(message, 'error');
 }
 
 function showSuccess(message) {
-    alert(message); // You can replace this with a better UI notification
+    showNotification(message, 'success');
+}
+
+function showNotification(message, type) {
+    // Remove any existing notifications
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-message">${message}</span>
+            <button class="notification-close">&times;</button>
+        </div>
+    `;
+
+    // Add styles
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        max-width: 400px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        ${type === 'error' ? 'background-color: #e74c3c;' : 'background-color: #27ae60;'}
+    `;
+
+    // Style the notification content
+    const notificationContent = notification.querySelector('.notification-content');
+    notificationContent.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+    `;
+
+    // Style the close button
+    const closeBtn = notification.querySelector('.notification-close');
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background-color 0.2s ease;
+    `;
+
+    closeBtn.addEventListener('mouseenter', () => {
+        closeBtn.style.backgroundColor = 'rgba(255,255,255,0.2)';
+    });
+
+    closeBtn.addEventListener('mouseleave', () => {
+        closeBtn.style.backgroundColor = 'transparent';
+    });
+
+    // Add to page
+    document.body.appendChild(notification);
+
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
+    }, 5000);
+
+    // Close button functionality
+    closeBtn.addEventListener('click', () => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
+    });
 }
 
 // Add payForCar function
 async function payForCar(car) {
     try {
+        // Calculate amount based on actual booking dates
         let amount = car.price;
         if (car.bookingDetails && car.bookingDetails.returnDate && car.bookingDetails.bookingDate) {
             const start = new Date(car.bookingDetails.bookingDate);
@@ -384,25 +599,29 @@ async function payForCar(car) {
             const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
             amount = car.price * days;
         }
+        
         const response = await fetch(`${API_URL}/payments/booking`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                bookingId: car._id, // Use car._id as bookingId
                 carId: car._id,
                 carName: car.name,
                 amount,
                 status: 'Pending'
             })
         });
+        
         if (response.ok) {
-            showSuccess('Payment initiated!');
-            loadReservedCars();
+            showSuccess('Payment initiated! Please complete your payment.');
+            loadReservedCars(); // Refresh the reserved cars list
         } else {
             const error = await response.json();
-            showError(error.message || 'Payment failed.');
+            showError(error.message || 'Payment failed. Please try again.');
         }
     } catch (error) {
-        showError('Payment failed.');
+        console.error('Payment error:', error);
+        showError('Payment failed. Please try again.');
     }
 }
 
@@ -414,13 +633,14 @@ async function completePayment(paymentId) {
             headers: { 'Content-Type': 'application/json' }
         });
         if (response.ok) {
-            showSuccess('Payment completed!');
-            loadReservedCars();
+            showSuccess('Payment completed successfully! Your car is now ready for pickup.');
+            loadReservedCars(); // Refresh the reserved cars list
         } else {
             const error = await response.json();
-            showError(error.message || 'Failed to complete payment.');
+            showError(error.message || 'Failed to complete payment. Please try again.');
         }
     } catch (error) {
-        showError('Failed to complete payment.');
+        console.error('Complete payment error:', error);
+        showError('Failed to complete payment. Please try again.');
     }
 }

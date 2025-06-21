@@ -82,7 +82,7 @@
     <div id="bookingModal" class="modal">
       <div class="modal-content">
         <span class="close">&times;</span>
-        <h2>Book Your Car</h2>
+        <h2>Reserve Your Car</h2>
         <form id="bookingForm">
           <div class="form-group">
             <label for="name">Your Name:</label>
@@ -93,14 +93,18 @@
             <input type="email" id="email" required />
           </div>
           <div class="form-group">
+            <label for="startDate">Start Date:</label>
+            <input type="date" id="startDate" required />
+          </div>
+          <div class="form-group">
             <label for="returnDate">Return Date:</label>
             <input type="date" id="returnDate" required />
           </div>
           <div class="booking-summary">
-            <h3>Booking Summary</h3>
+            <h3>Reservation Summary</h3>
             <div id="bookingDetails"></div>
           </div>
-          <button type="submit" class="btn-primary">Confirm Booking</button>
+          <button type="submit" class="btn-primary">Confirm Reservation</button>
         </form>
       </div>
     </div>

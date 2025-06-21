@@ -1,4 +1,5 @@
 const Car = require("../models/Car");
+const Payment = require("../models/Payment");
 
 // Get all cars
 exports.getAllCars = async (req, res) => {
@@ -53,11 +54,32 @@ exports.bookCar = async (req, res) => {
       return res.status(400).json({ message: 'Car is already reserved' });
     }
 
+    // Validate startDate and returnDate
+    const { startDate, returnDate } = req.body;
+    if (!startDate || !returnDate) {
+      return res.status(400).json({ message: 'Start date and return date are required.' });
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(startDate);
+    const end = new Date(returnDate);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    if (start < today) {
+      return res.status(400).json({ message: 'Start date cannot be before today.' });
+    }
+    if (end < today) {
+      return res.status(400).json({ message: 'Return date cannot be before today.' });
+    }
+    if (end < start) {
+      return res.status(400).json({ message: 'Return date cannot be before start date.' });
+    }
+
     car.isBooked = true;
     car.bookingDetails = {
       bookedBy: req.body.name,
-      bookingDate: new Date(),
-      returnDate: req.body.returnDate ? new Date(req.body.returnDate) : null,
+      bookingDate: start,
+      returnDate: end,
       totalPrice: null // You can calculate this if needed
     };
     await car.save();
@@ -69,7 +91,8 @@ exports.bookCar = async (req, res) => {
         carName: car.name,
         customerName: req.body.name,
         customerEmail: req.body.email,
-        returnDate: req.body.returnDate
+        startDate,
+        returnDate
       }
     });
   } catch (error) {
@@ -147,11 +170,21 @@ exports.getRentedCars = async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Normalize to midnight for date-only comparison
-    const rentedCars = await Car.find({
+    // Find all cars that are booked and in the rental period
+    const cars = await Car.find({
       isBooked: true,
       'bookingDetails.bookingDate': { $lte: today },
       'bookingDetails.returnDate': { $gte: today }
     });
+    // Find all completed payments for these cars
+    const carIds = cars.map(car => car._id.toString());
+    const payments = await Payment.find({
+      bookingId: { $in: carIds },
+      status: 'Completed'
+    });
+    const paidCarIds = new Set(payments.map(p => p.bookingId));
+    // Only return cars whose payment is completed
+    const rentedCars = cars.filter(car => paidCarIds.has(car._id.toString()));
     res.json(rentedCars);
   } catch (error) {
     res.status(500).json({ message: error.message });
