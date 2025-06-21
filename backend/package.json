@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
     "add-cars": "node scripts/addCars.js",
-    "add-cars-bulk": "node scripts/addCarsBulk.js"
+    "add-cars-bulk": "node scripts/addCarsBulk.js",
+    "add-admin": "node scripts/addAdmin.js"
   },
   "keywords": [],
   "author": "",
