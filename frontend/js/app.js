@@ -17,9 +17,67 @@ const bookingDetails = document.getElementById("bookingDetails");
 let selectedCarId = null;
 let allCars = []; // To store all cars fetched from the server
 let allPayments = [];
+let currentUser = null;
+
+// Authentication check
+function checkAuth() {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        // Redirect to login if not authenticated
+        window.location.href = 'login.html';
+        return false;
+    }
+    return true;
+}
+
+// Get current user
+function getCurrentUser() {
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+        currentUser = JSON.parse(userData);
+    }
+    return currentUser;
+}
+
+// Logout function
+function logout() {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('favoriteCars');
+    window.location.href = 'login.html';
+}
+
+// Update navigation with user info and logout
+function updateNavigation() {
+    const user = getCurrentUser();
+    const nav = document.querySelector('.nav-links');
+    
+    if (user && nav) {
+        // Add user menu if it doesn't exist
+        if (!document.querySelector('.user-menu')) {
+            const userMenu = document.createElement('div');
+            userMenu.className = 'user-menu';
+            userMenu.innerHTML = `
+                <div class="user-info">
+                    <span>Welcome, ${user.name}</span>
+                    <button onclick="logout()" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            `;
+            nav.appendChild(userMenu);
+        }
+    }
+}
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Check authentication first
+    if (!checkAuth()) return;
+    
+    // Update navigation with user info
+    updateNavigation();
+    
     // Load content based on current page
     const currentPage = window.location.pathname.split('/').pop();
     switch(currentPage) {
@@ -232,6 +290,13 @@ function setupModal() {
         e.preventDefault();
         const carId = form.dataset.carId;
         
+        // Get current user
+        const user = getCurrentUser();
+        if (!user) {
+            showError('Please log in to book a car.');
+            return;
+        }
+        
         // Get form values
         const name = document.getElementById('name').value;
         const email = document.getElementById('email').value;
@@ -269,10 +334,12 @@ function setupModal() {
         };
 
         try {
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`${API_URL}/cars/${carId}/book`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(formData)
             });
@@ -300,6 +367,16 @@ function openBookingModal(carId) {
     if (!modal || !form) return;
     
     form.dataset.carId = carId;
+    
+    // Pre-fill form with user data
+    const user = getCurrentUser();
+    if (user) {
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        if (nameInput) nameInput.value = user.name;
+        if (emailInput) emailInput.value = user.email;
+    }
+    
     modal.style.display = 'block';
     
     // Update booking summary when modal opens
