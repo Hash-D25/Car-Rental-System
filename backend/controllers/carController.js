@@ -1,5 +1,6 @@
 const Car = require("../models/Car");
 const Payment = require("../models/Payment");
+const User = require("../models/User");
 
 // Get all cars
 exports.getAllCars = async (req, res) => {
@@ -54,6 +55,12 @@ exports.bookCar = async (req, res) => {
       return res.status(400).json({ message: 'Car is already reserved' });
     }
 
+    // Get user from the verified token
+    const user = await User.findById(req.userId);
+    if (!user) {
+        return res.status(404).json({ message: "User not found" });
+    }
+
     // Validate startDate and returnDate
     const { startDate, returnDate } = req.body;
     if (!startDate || !returnDate) {
@@ -77,7 +84,8 @@ exports.bookCar = async (req, res) => {
 
     car.isBooked = true;
     car.bookingDetails = {
-      bookedBy: req.body.name,
+      userId: req.userId,
+      bookedBy: user.name,
       bookingDate: start,
       returnDate: end,
       totalPrice: null // You can calculate this if needed
@@ -89,8 +97,8 @@ exports.bookCar = async (req, res) => {
       bookingDetails: {
         carId: car._id,
         carName: car.name,
-        customerName: req.body.name,
-        customerEmail: req.body.email,
+        customerName: user.name,
+        customerEmail: user.email,
         startDate,
         returnDate
       }
@@ -161,7 +169,8 @@ exports.addMultipleCars = async (req, res) => {
 // Get reserved cars
 exports.getReservedCars = async (req, res) => {
   try {
-    const reservedCars = await Car.find({ isBooked: true });
+    // Only find cars booked by the logged-in user
+    const reservedCars = await Car.find({ 'bookingDetails.userId': req.userId, isBooked: true });
     res.json(reservedCars);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -172,9 +181,10 @@ exports.getReservedCars = async (req, res) => {
 exports.getRentedCars = async (req, res) => {
   try {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize to midnight for date-only comparison
-    // Find all cars that are booked and in the rental period
+    today.setHours(0, 0, 0, 0);
+    // Find cars booked by the current user and in the rental period
     const cars = await Car.find({
+      'bookingDetails.userId': req.userId,
       isBooked: true,
       'bookingDetails.bookingDate': { $lte: today },
       'bookingDetails.returnDate': { $gte: today }
@@ -231,6 +241,11 @@ exports.cancelBooking = async (req, res) => {
 
     if (!car.isBooked) {
       return res.status(400).json({ message: "Car is not booked" });
+    }
+
+    // Security check: only the user who booked can cancel
+    if (car.bookingDetails.userId.toString() !== req.userId) {
+        return res.status(403).json({ message: "You are not authorized to cancel this booking." });
     }
 
     car.isBooked = false;

@@ -4,6 +4,7 @@ const cors = require('cors');
 const carRoutes = require('./routes/carRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const authRoutes = require('./routes/authRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const carController = require('./controllers/carController');
 require('dotenv').config();
 
@@ -26,6 +27,7 @@ mongoose.connect(DB_URI)
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/payments', paymentRoutes);
 

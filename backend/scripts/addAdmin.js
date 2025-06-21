@@ -1,38 +1,47 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
-require('dotenv').config({ path: '../.env' });
+require('dotenv').config();
 
+// Connect to MongoDB
 const DB_URI = process.env.DATABASE || process.env.DATABASE_LOCAL || 'mongodb://localhost:27017/test';
-
-const addAdmin = async () => {
-  try {
-    await mongoose.connect(DB_URI);
-    console.log('MongoDB connected successfully');
-
-    const adminEmail = 'admin@gmail.com';
-    const adminPassword = 'password123';
-
-    const existingAdmin = await User.findOne({ email: adminEmail });
-    if (existingAdmin) {
-      console.log('Admin user with this email already exists.');
-      return;
-    }
-
-    const adminUser = new User({
-      name: 'Admin',
-      email: adminEmail,
-      password: adminPassword,
-      role: 'admin',
+mongoose.connect(DB_URI)
+    .then(() => console.log('MongoDB connected for admin creation.'))
+    .catch(err => {
+        console.error('MongoDB connection error:', err);
+        process.exit(1);
     });
 
-    await adminUser.save();
-    console.log('Admin user created successfully!');
-  } catch (error) {
-    console.error('Error creating admin user:', error);
-  } finally {
-    mongoose.connection.close();
-  }
+// Admin User Details - You can modify these
+const adminDetails = {
+    name: 'Admin User',
+    email: 'admin@carrental.com',
+    password: 'adminpassword',
+    role: 'admin'
+};
+
+const addAdmin = async () => {
+    try {
+        // Check if admin already exists
+        const existingAdmin = await User.findOne({ email: adminDetails.email });
+        if (existingAdmin) {
+            console.log('Admin user with this email already exists.');
+            return;
+        }
+
+        // Create and save the new admin user
+        const admin = new User(adminDetails);
+        await admin.save();
+        console.log('Admin user created successfully!');
+        console.log(`Email: ${admin.email}`);
+        console.log('Password: adminpassword');
+
+    } catch (error) {
+        console.error('Error creating admin user:', error.message);
+    } finally {
+        mongoose.disconnect();
+        console.log('MongoDB connection closed.');
+    }
 };
 
 addAdmin(); 

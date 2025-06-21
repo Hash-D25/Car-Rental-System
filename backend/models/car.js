@@ -47,6 +47,10 @@ const carSchema = new mongoose.Schema(
       default: false,
     },
     bookingDetails: {
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
       bookedBy: String,
       bookingDate: Date,
       returnDate: Date,

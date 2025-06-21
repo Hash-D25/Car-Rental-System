@@ -2,9 +2,8 @@ const Payment = require('../models/Payment');
 
 exports.getPayments = async (req, res) => {
     try {
-        let query = {};
-
         const { status, dateRange } = req.query;
+        let query = { userId: req.userId }; // Filter by user ID
 
         if (status) {
             query.status = status;
@@ -30,7 +29,7 @@ exports.getPayments = async (req, res) => {
             query.date = { $gte: startDate };
         }
 
-        const payments = await Payment.find(query);
+        const payments = await Payment.find(query).sort({ date: -1 });
         res.json(payments);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -48,7 +47,7 @@ exports.createPayment = async (req, res) => {
     }
 };
 
-// Create a new payment for a booking (now supports Pending status)
+// Create a new payment for a booking
 exports.createPaymentForBooking = async (req, res) => {
     try {
         const { carId, carName, amount, status } = req.body;
@@ -56,6 +55,7 @@ exports.createPaymentForBooking = async (req, res) => {
             return res.status(400).json({ message: 'Missing required payment fields' });
         }
         const payment = new Payment({
+            userId: req.userId, // Associate payment with user
             bookingId: carId,
             carName,
             amount,
@@ -73,6 +73,12 @@ exports.completePayment = async (req, res) => {
     try {
         const payment = await Payment.findById(req.params.id);
         if (!payment) return res.status(404).json({ message: 'Payment not found' });
+
+        // Security check to ensure the user owns this payment
+        if (payment.userId.toString() !== req.userId) {
+            return res.status(403).json({ message: 'You are not authorized to complete this payment.' });
+        }
+
         payment.status = 'Completed';
         await payment.save();
         res.json(payment);

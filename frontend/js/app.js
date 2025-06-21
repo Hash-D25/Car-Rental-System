@@ -19,6 +19,15 @@ let allCars = []; // To store all cars fetched from the server
 let allPayments = [];
 let currentUser = null;
 
+// Helper to get authorization headers
+function getAuthHeaders() {
+    const token = localStorage.getItem('authToken');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
+
 // Authentication check
 function checkAuth() {
     const token = localStorage.getItem('token');
@@ -53,22 +62,31 @@ function logout() {
 // Update navigation with user info and logout
 function updateNavigation() {
     const user = getCurrentUser();
-    const nav = document.querySelector('.nav-links');
+    const navLinks = document.querySelector('.nav-links');
     
-    if (user && nav) {
+    if (user && navLinks) {
+        // Add Admin dashboard link if user is an admin
+        if (user.role === 'admin' && !document.querySelector('a[href="pages/admin.html"]')) {
+            const adminLink = document.createElement('a');
+            adminLink.href = 'pages/admin.html';
+            adminLink.textContent = 'Admin';
+            // Insert it before the 'Reserved' link
+            navLinks.insertBefore(adminLink, navLinks.children[1]);
+        }
+
         // Add user menu if it doesn't exist
         if (!document.querySelector('.user-menu')) {
             const userMenu = document.createElement('div');
             userMenu.className = 'user-menu';
             userMenu.innerHTML = `
                 <div class="user-info">
-                    <span>Welcome, ${user.name}</span>
+                    <a href="profile.html" class="profile-link">Welcome, ${user.name}</a>
                     <button onclick="logout()" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
                 </div>
             `;
-            nav.appendChild(userMenu);
+            navLinks.appendChild(userMenu);
         }
     }
 }
@@ -455,9 +473,10 @@ function updateBookingSummary() {
 // Load reserved cars
 async function loadReservedCars() {
     try {
+        const headers = getAuthHeaders();
         const [carsResponse, paymentsResponse] = await Promise.all([
-            fetch(`${API_URL}/cars/reserved`),
-            fetch(`${API_URL}/payments`)
+            fetch(`${API_URL}/cars/reserved`, { headers }),
+            fetch(`${API_URL}/payments`, { headers })
         ]);
         if (!carsResponse.ok) throw new Error('Failed to fetch reserved cars');
         if (!paymentsResponse.ok) throw new Error('Failed to fetch payments');
@@ -473,7 +492,8 @@ async function loadReservedCars() {
 // Load rented cars
 async function loadRentedCars() {
     try {
-        const response = await fetch(`${API_URL}/cars/rented`);
+        const headers = getAuthHeaders();
+        const response = await fetch(`${API_URL}/cars/rented`, { headers });
         if (!response.ok) throw new Error('Failed to fetch rented cars');
         const cars = await response.json();
         displayCars(cars, rentedCarsGrid);
@@ -495,7 +515,7 @@ async function loadFavoriteCars() {
         }
 
         // Fetch each favorite car by its ID
-        const fetchPromises = favoriteCarIds.map(id => fetch(`${API_URL}/cars/${id}`));
+        const fetchPromises = favoriteCarIds.map(id => fetch(`${API_URL}/cars/${id}`, { headers: getAuthHeaders() }));
         const responses = await Promise.all(fetchPromises);
         const cars = await Promise.all(responses.map(res => res.json()));
         
@@ -513,7 +533,7 @@ async function loadFavoriteCars() {
 async function loadPayments(filters = {}) {
     try {
         const queryParams = new URLSearchParams(filters).toString();
-        const response = await fetch(`${API_URL}/payments?${queryParams}`);
+        const response = await fetch(`${API_URL}/payments?${queryParams}`, { headers: getAuthHeaders() });
         if (!response.ok) throw new Error('Failed to fetch payments');
         const payments = await response.json();
         displayPayments(payments);
@@ -713,7 +733,7 @@ async function payForCar(car) {
         
         const response = await fetch(`${API_URL}/payments/booking`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 bookingId: car._id, // Use car._id as bookingId
                 carId: car._id,
@@ -741,7 +761,7 @@ async function completePayment(paymentId) {
     try {
         const response = await fetch(`${API_URL}/payments/${paymentId}/complete`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' }
+            headers: getAuthHeaders()
         });
         if (response.ok) {
             showSuccess('Payment completed successfully! Your car is now ready for pickup.');
@@ -765,6 +785,7 @@ async function cancelBooking(carId) {
     try {
         const response = await fetch(`${API_URL}/cars/${carId}/cancel`, {
             method: 'POST',
+            headers: getAuthHeaders()
         });
 
         if (response.ok) {

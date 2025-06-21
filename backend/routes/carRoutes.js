@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const carController = require("../controllers/carController");
+const { verifyToken } = require("../controllers/authController");
 
 // Get all cars
 router.get("/", carController.getAllCars);
@@ -12,10 +13,10 @@ router.get("/filter", carController.getFilteredCars);
 router.post("/", carController.createCar);
 
 // Book a car
-router.post("/:carId/book", carController.bookCar);
+router.post("/:carId/book", verifyToken, carController.bookCar);
 
 // Cancel a booking
-router.post("/:carId/cancel", carController.cancelBooking);
+router.post("/:carId/cancel", verifyToken, carController.cancelBooking);
 
 // Update car availability
 router.patch("/:carId/availability", carController.updateCarAvailability);
@@ -27,10 +28,10 @@ router.delete("/:carId", carController.deleteCar);
 router.post("/bulk", carController.addMultipleCars);
 
 // Get reserved cars
-router.get("/reserved", carController.getReservedCars);
+router.get("/reserved", verifyToken, carController.getReservedCars);
 
 // Get rented cars
-router.get("/rented", carController.getRentedCars);
+router.get("/rented", verifyToken, carController.getRentedCars);
 
 // Get favorite cars
 router.get("/favorites", carController.getFavoriteCars);
