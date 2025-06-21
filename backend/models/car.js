@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Payment = require("./Payment");
 
 const carSchema = new mongoose.Schema(
   {
@@ -54,6 +55,18 @@ const carSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+  }
+);
+
+carSchema.pre(
+  "findOneAndDelete",
+  { document: false, query: true },
+  async function (next) {
+    const car = await this.model.findOne(this.getFilter());
+    if (car) {
+      await Payment.deleteMany({ bookingId: car._id });
+    }
+    next();
   }
 );
 
