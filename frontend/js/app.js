@@ -48,7 +48,7 @@ function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
   localStorage.removeItem("favoriteCars");
-  window.location.href = "/frontend/login.html";
+  window.location.href = "/frontend/index.html";
 }
 
 // Update navigation with user info and logout
