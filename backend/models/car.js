@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const Payment = require("./payment");
+const Payment = require("./payment.js");
 
 const carSchema = new mongoose.Schema(
   {

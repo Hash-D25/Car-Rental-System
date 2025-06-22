@@ -1,7 +1,7 @@
-const User = require('../models/user');
+const User = require('../models/user.js');
 const jwt = require('jsonwebtoken');
-const Payment = require('../models/payment');
-const Car = require('../models/car');
+const Payment = require('../models/payment.js');
+const Car = require('../models/car.js');
 const mongoose = require('mongoose');
 
 // Generate JWT Token

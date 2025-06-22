@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const User = require('../models/user');
+const User = require('../models/user.js');
 require('dotenv').config();
 
 // Connect to MongoDB

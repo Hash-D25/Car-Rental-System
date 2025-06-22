@@ -1,6 +1,6 @@
-const Car = require('../models/car');
-const Payment = require('../models/payment');
-const User = require('../models/user');
+const Car = require('../models/car.js');
+const Payment = require('../models/payment.js');
+const User = require('../models/user.js');
 
 // Get all cars for the admin dashboard
 exports.getAllCars = async (req, res) => {
