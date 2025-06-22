@@ -31,15 +31,7 @@ function getAuthHeaders() {
 // Authentication check
 function checkAuth() {
   const token = localStorage.getItem("token");
-  if (!token) {
-    // Redirect to login if not authenticated
-    const currentPage = window.location.pathname.split("/").pop();
-    if (currentPage !== "login.html" && currentPage !== "register.html") {
-      window.location.href = "/frontend/login.html";
-    }
-    return false;
-  }
-  return true;
+  return !!token;
 }
 
 // Get current user
@@ -86,14 +78,18 @@ function updateNavigation() {
 
 // Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
-  // Check authentication first
-  if (!checkAuth()) return;
+  const currentPage = window.location.pathname.split("/").pop();
+  const protectedPages = ["reserved.html", "rented.html", "favorites.html", "payments.html", "profile.html"];
+
+  if (protectedPages.includes(currentPage) && !checkAuth()) {
+    window.location.href = "/frontend/login.html";
+    return;
+  }
 
   // Update navigation with user info
   updateNavigation();
 
   // Load content based on current page
-  const currentPage = window.location.pathname.split("/").pop();
   switch (currentPage) {
     case "index.html":
     case "":
@@ -431,6 +427,11 @@ function setupModal() {
 }
 
 function openBookingModal(carId) {
+  if (!checkAuth()) {
+    window.location.href = "/frontend/login.html";
+    return;
+  }
+
   const car = allCars.find((c) => c._id === carId);
   if (!car) {
     console.error("Car not found for booking");
