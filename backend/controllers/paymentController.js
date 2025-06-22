@@ -1,4 +1,4 @@
-const Payment = require('../models/Payment');
+const Payment = require('../models/payment');
 
 exports.getPayments = async (req, res) => {
     try {

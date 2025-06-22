@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const Payment = require("./Payment");
+const Payment = require("./payment");
 
 const carSchema = new mongoose.Schema(
   {
@@ -49,7 +49,7 @@ const carSchema = new mongoose.Schema(
     bookingDetails: {
       userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'user'
       },
       bookedBy: String,
       bookingDate: Date,
@@ -74,4 +74,4 @@ carSchema.pre(
   }
 );
 
-module.exports = mongoose.models.Car || mongoose.model("Car", carSchema);
+module.exports = mongoose.models.car || mongoose.model("car", carSchema);

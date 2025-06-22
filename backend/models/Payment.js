@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const paymentSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'user',
         required: true
     },
     bookingId: {
@@ -30,4 +30,4 @@ const paymentSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Payment', paymentSchema); 
+module.exports = mongoose.model('payment', paymentSchema);
