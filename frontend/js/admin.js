@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const API_URL = 'http://localhost:3000/api';
+    const API_URL = 'https://car-rental-system-backend-9lih.onrender.com/api';
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
 

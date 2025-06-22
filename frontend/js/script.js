@@ -1,4 +1,4 @@
-const apiUrl = "http://localhost:3000/api/cars";
+const apiUrl = "https://car-rental-system-backend-9lih.onrender.com/api/cars";
 
 document.addEventListener("DOMContentLoaded", () => {
   fetchCars();

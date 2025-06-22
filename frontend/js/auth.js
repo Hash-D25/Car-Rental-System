@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const API_URL = 'http://localhost:3000/api/auth';
+    const API_URL = 'https://car-rental-system-backend-9lih.onrender.com/api/auth';
     
     const currentPage = window.location.pathname.split('/').pop();
     
@@ -53,7 +53,7 @@ async function handleRegister(e) {
     const payload = { name, email, password, phone, address, licenseNumber };
 
     try {
-        const response = await fetch(`http://localhost:3000/api/auth/register`, {
+        const response = await fetch(`https://car-rental-system-backend-9lih.onrender.com/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -89,7 +89,7 @@ async function handleLogin(e) {
     const password = document.getElementById('loginPassword').value;
 
     try {
-        const response = await fetch(`http://localhost:3000/api/auth/login`, {
+        const response = await fetch(`https://car-rental-system-backend-9lih.onrender.com/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -118,7 +118,7 @@ async function loadUserProfile() {
     }
 
     try {
-        const response = await fetch('http://localhost:3000/api/auth/profile', {
+        const response = await fetch('https://car-rental-system-backend-9lih.onrender.com/api/auth/profile', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -160,7 +160,7 @@ async function handleProfileUpdate(e) {
     };
 
     try {
-        const response = await fetch('http://localhost:3000/api/auth/profile', {
+        const response = await fetch('https://car-rental-system-backend-9lih.onrender.com/api/auth/profile', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -191,7 +191,7 @@ async function handlePasswordChange(e) {
     const newPassword = document.getElementById('newPassword').value;
 
     try {
-        const response = await fetch('http://localhost:3000/api/auth/change-password', {
+        const response = await fetch('https://car-rental-system-backend-9lih.onrender.com/api/auth/change-password', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -229,7 +229,7 @@ function toggleProfileEdit(isEditing) {
 async function loadUserDashboardStats() {
     const token = localStorage.getItem('token');
     try {
-        const response = await fetch('http://localhost:3000/api/auth/profile/stats', {
+        const response = await fetch('https://car-rental-system-backend-9lih.onrender.com/api/auth/profile/stats', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
