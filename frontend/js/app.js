@@ -113,6 +113,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   updateNav();
   setupLogout();
+
+  // Hamburger menu toggle for mobile nav
+  const hamburger = document.getElementById("hamburgerMenu");
+  const navLinks = document.querySelector(".nav-links");
+  const authLinks = document.querySelector(".auth-links");
+  if (hamburger && navLinks && authLinks) {
+    hamburger.addEventListener("click", () => {
+      navLinks.classList.toggle("active");
+      authLinks.classList.toggle("active");
+    });
+  }
 });
 
 function updateNav() {
