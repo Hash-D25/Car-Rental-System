@@ -48,7 +48,7 @@ function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
   localStorage.removeItem("favoriteCars");
-  window.location.href = "/frontend/index.html";
+  window.location.href = "index.html";
 }
 
 // Update navigation with user info and logout
@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const protectedPages = ["reserved.html", "rented.html", "favorites.html", "payments.html", "profile.html"];
 
   if (protectedPages.includes(currentPage) && !checkAuth()) {
-    window.location.href = "/frontend/login.html";
+    window.location.href = "login.html";
     return;
   }
 
@@ -428,7 +428,7 @@ function setupModal() {
 
 function openBookingModal(carId) {
   if (!checkAuth()) {
-    window.location.href = "/frontend/login.html";
+    window.location.href = "login.html";
     return;
   }
 
