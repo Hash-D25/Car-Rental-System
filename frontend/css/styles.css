@@ -542,7 +542,7 @@ footer {
         font-size: 2.8rem;
     }
     .nav-links, .auth-links {
-        display: none; /* Example for mobile: consider a hamburger menu */
+        display: none; 
     }
     .filters {
         flex-direction: column;
