@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const protectedPages = ["reserved.html", "rented.html", "favorites.html", "payments.html", "profile.html"];
 
   if (protectedPages.includes(currentPage) && !checkAuth()) {
-    window.location.href = "login.html";
+    window.location.href = "/login.html";
     return;
   }
 
@@ -428,7 +428,7 @@ function setupModal() {
 
 function openBookingModal(carId) {
   if (!checkAuth()) {
-    window.location.href = "login.html";
+    window.location.href = "/login.html";
     return;
   }
 
