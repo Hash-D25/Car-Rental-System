@@ -5,6 +5,7 @@ const User = require("../models/user.js");
 // Get all cars
 exports.getAllCars = async (req, res) => {
   try {
+    await exports.freeUpCars(); // Ensure expired bookings are cleared
     const cars = await Car.find();
     res.json(cars);
   } catch (error) {
@@ -15,6 +16,7 @@ exports.getAllCars = async (req, res) => {
 // Get cars by filters
 exports.getFilteredCars = async (req, res) => {
   try {
+    await exports.freeUpCars(); // Ensure expired bookings are cleared
     const { category, price, transmission } = req.query;
     let query = {};
 
