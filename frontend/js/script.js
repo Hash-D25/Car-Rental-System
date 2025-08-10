@@ -1,4 +1,4 @@
-const apiUrl = "https://car-rental-system-backend-9lih.onrender.com/api/cars";
+const apiUrl = "https://crs-server.zeabur.app/api/cars";
 
 document.addEventListener("DOMContentLoaded", () => {
   fetchCars();

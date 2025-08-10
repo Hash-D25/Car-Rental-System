@@ -1,4 +1,4 @@
-const API_URL = "https://car-rental-system-backend-9lih.onrender.com/api";
+const API_URL = "https://crs-server.zeabur.app/api";
 
 // DOM Elements
 const carsGrid = document.getElementById("carsGrid");
@@ -79,7 +79,13 @@ function updateNavigation() {
 // Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
   const currentPage = window.location.pathname.split("/").pop();
-  const protectedPages = ["reserved.html", "rented.html", "favorites.html", "payments.html", "profile.html"];
+  const protectedPages = [
+    "reserved.html",
+    "rented.html",
+    "favorites.html",
+    "payments.html",
+    "profile.html",
+  ];
 
   if (protectedPages.includes(currentPage) && !checkAuth()) {
     window.location.href = "/login.html";
